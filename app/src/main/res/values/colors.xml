@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="app_background">#ECECEC</color>
+    <color name="primary_red">#8E210E</color>
+    <color name="dark_red">#680B05</color>
+    <color name="accent_orange">#C97921</color>
+    <color name="text_primary">#1F1F1F</color>
+    <color name="text_secondary">#5C5C5C</color>
+    <color name="success_green">#2E7D32</color>
+    <color name="warning_orange">#EF6C00</color>
+    <color name="danger_red">#C62828</color>
+    <color name="chip_bg">#F6E3D6</color>
+</resources>
