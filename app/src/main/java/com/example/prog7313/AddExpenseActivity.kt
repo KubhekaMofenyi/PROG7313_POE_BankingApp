@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
-import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -114,9 +113,9 @@ class AddExpenseActivity : AppCompatActivity() {
             }
         })
 
-        spCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        spCategory.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
-                parent: AdapterView<*>?,
+                parent: android.widget.AdapterView<*>?,
                 view: View?,
                 position: Int,
                 id: Long
@@ -124,7 +123,7 @@ class AddExpenseActivity : AppCompatActivity() {
                 updateWarning()
             }
 
-            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
         }
 
         etDate.setOnClickListener {

@@ -31,7 +31,7 @@ class FinanceActivity : AppCompatActivity() {
         val cardQuickAddExpense = findViewById<LinearLayout>(R.id.cardQuickAddExpense)
         val cardMonthlyPlanner = findViewById<LinearLayout>(R.id.cardMonthlyPlanner)
 
-        val pieEntries = arrayListOf(
+        val pieEntries = arrayListOf<PieEntry>(
             PieEntry(850f, "Groceries"),
             PieEntry(420f, "Transport"),
             PieEntry(1300f, "Bills"),
@@ -55,7 +55,7 @@ class FinanceActivity : AppCompatActivity() {
         pieChart.setEntryLabelColor(Color.BLACK)
         pieChart.invalidate()
 
-        val barEntries = arrayListOf(
+        val barEntries = arrayListOf<BarEntry>(
             BarEntry(1f, 120f),
             BarEntry(2f, 80f),
             BarEntry(3f, 150f),
