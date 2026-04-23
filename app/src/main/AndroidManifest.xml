@@ -20,6 +20,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".DashboardActivity" />
+        <activity android:name=".FinanceActivity" />
+        <activity android:name=".PlannerActivity" />
+        <activity android:name=".RegisterActivity" />
+        <activity android:name=".SettingsActivity" />
+        <activity android:name=".AddExpenseActivity" />
+        <activity android:name=".OnboardingActivity" />
+        <activity android:name=".GamificationActivity" />
+        <activity android:name=".ExpenseHistoryActivity" />
+        <activity android:name=".ForgotPasswordActivity" />
     </application>
 
 </manifest>
