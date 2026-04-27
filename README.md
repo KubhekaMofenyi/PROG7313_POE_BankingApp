@@ -243,7 +243,7 @@ The APK file is included in the final submission and can be installed directly.
 
 ## 🎥 Demo Video
 
-👉 [Insert YouTube Link Here]
+👉 
 
 ---
 
