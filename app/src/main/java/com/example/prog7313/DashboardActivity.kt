@@ -24,6 +24,7 @@ class DashboardActivity : AppCompatActivity() {
         val tvRemaining = findViewById<TextView>(R.id.tvRemaining)
         val tvSafeSpend = findViewById<TextView>(R.id.tvSafeSpend)
         val tvOverspendingMessage = findViewById<TextView>(R.id.tvOverspendingMessage)
+        val tvInsightMessage = findViewById<TextView>(R.id.tvInsightMessage)
         val progressBudget = findViewById<ProgressBar>(R.id.progressBudget)
 
         val db = AppDatabase.getDatabase(this)
@@ -99,6 +100,33 @@ class DashboardActivity : AppCompatActivity() {
                 cardOverspending.visibility = View.VISIBLE
                 tvOverspendingMessage.text = "No category overspending detected."
             }
+
+            val categoryTotals = expenseDao.getCategoryTotals()
+            val highestCategory = categoryTotals.maxByOrNull { it.total }
+
+            val insight = when {
+                categoryTotals.isEmpty() -> {
+                    "No spending insights yet. Add expenses to get started."
+                }
+
+                totalSpent > totalBalance -> {
+                    "⚠ You have exceeded your monthly budget."
+                }
+
+                highestCategory != null && highestCategory.total >= totalSpent * 0.4 -> {
+                    "You're spending heavily on ${highestCategory.category} this month."
+                }
+
+                totalSpent < totalBalance * 0.5 -> {
+                    "Great job! You're well within your budget."
+                }
+
+                else -> {
+                    "Your spending is balanced across categories."
+                }
+            }
+
+            tvInsightMessage.text = insight
         }
     }
 
@@ -119,7 +147,6 @@ class DashboardActivity : AppCompatActivity() {
         val tvSafeSpend = findViewById<TextView>(R.id.tvSafeSpend)
         val tvRecentTip = findViewById<TextView>(R.id.tvRecentTip)
         val tvOverspendingMessage = findViewById<TextView>(R.id.tvOverspendingMessage)
-        val tvInsightMessage = findViewById<TextView>(R.id.tvInsightMessage)
         val tvAchievementSummary = findViewById<TextView>(R.id.tvAchievementSummary)
         val progressBudget = findViewById<ProgressBar>(R.id.progressBudget)
 
@@ -141,10 +168,6 @@ class DashboardActivity : AppCompatActivity() {
         cardAvailable.setOnClickListener {
             startActivity(Intent(this, AddExpenseActivity::class.java))
         }
-
-
-        tvInsightMessage.text =
-            "You spend more on weekends than weekdays."
 
         tvAchievementSummary.text =
             "Streak: 7 days • Level: Bronze • Badge: Planner"
