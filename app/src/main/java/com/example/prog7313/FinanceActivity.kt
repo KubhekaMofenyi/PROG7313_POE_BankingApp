@@ -124,7 +124,7 @@ class FinanceActivity : AppCompatActivity() {
 
                 when {
                     limit == null || limit == 0.0 -> textView.setTextColor(Color.GRAY)
-                    spent > limit -> textView.setTextColor(Color.RED)
+                    spent >= limit -> textView.setTextColor(Color.RED)
                     spent > limit * 0.8 -> textView.setTextColor(Color.parseColor("#FF9800"))
                     else -> textView.setTextColor(Color.parseColor("#2E7D32"))
                 }
@@ -155,8 +155,6 @@ class FinanceActivity : AppCompatActivity() {
         val db = AppDatabase.getDatabase(this)
         val expenseDao = db.expenseDao()
         val budgetDao = db.budgetDao()
-
-        loadData()
 
         btnFinance.setBackgroundResource(R.drawable.bg_nav_selected)
         btnHome.setBackgroundColor(ContextCompat.getColor(this, android.R.color.transparent))

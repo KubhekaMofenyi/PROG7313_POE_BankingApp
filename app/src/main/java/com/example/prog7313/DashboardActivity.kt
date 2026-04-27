@@ -13,6 +13,9 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import kotlin.math.max
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class DashboardActivity : AppCompatActivity() {
 
@@ -125,8 +128,39 @@ class DashboardActivity : AppCompatActivity() {
                     "Your spending is balanced across categories."
                 }
             }
-
             tvInsightMessage.text = insight
+
+            //gamification
+            val statsDao = db.userStatsDao()
+
+            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+            val stats = statsDao.getStats()
+
+            val newStreak = when {
+                stats == null -> 1
+                stats.lastActiveDate == today -> stats.streak
+                else -> stats.streak + 1
+            }
+
+            statsDao.saveStats(
+                UserStats(
+                    lastActiveDate = today,
+                    streak = newStreak
+                )
+            )
+            //level
+            val level = when {
+                totalSpent < totalBalance * 0.5 -> "Gold"
+                totalSpent < totalBalance -> "Silver"
+                else -> "Bronze"
+            }
+            //badge
+            val badge = when {
+                newStreak >= 7 -> "Consistency Badge"
+                totalSpent < totalBalance * 0.7 -> "Smart Spender"
+                else -> "Getting Started"
+            }
         }
     }
 
