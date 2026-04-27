@@ -14,8 +14,11 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 class AddExpenseActivity : AppCompatActivity() {
@@ -36,6 +39,12 @@ class AddExpenseActivity : AppCompatActivity() {
         val btnFinance = findViewById<ImageButton>(R.id.btnFinance)
         val btnHome = findViewById<ImageButton>(R.id.btnHome)
         val btnSettings = findViewById<ImageButton>(R.id.btnSettings)
+
+        val etNotes = findViewById<EditText>(R.id.etNotes)
+        var receiptSelected = false
+
+        val db = AppDatabase.getDatabase(this)
+        val expenseDao = db.expenseDao()
 
         val categories = listOf("Groceries", "Transport", "Bills", "Entertainment", "Other")
         val spinnerAdapter = ArrayAdapter(
@@ -140,17 +149,46 @@ class AddExpenseActivity : AppCompatActivity() {
         }
 
         cardReceipt.setOnClickListener {
+            receiptSelected = true
             cardWarning.visibility = View.VISIBLE
             cardWarning.setBackgroundResource(R.drawable.bg_card_white)
             tvOverspendWarning.setTextColor(
                 ContextCompat.getColor(this, R.color.text_primary)
             )
-            tvOverspendWarning.text = "Receipt upload placeholder selected."
+            tvOverspendWarning.text = "Receipt selected."
         }
 
         btnSaveExpense.setOnClickListener {
-            startActivity(Intent(this, FinanceActivity::class.java))
-            finish()
+            val amount = etAmount.text.toString().toDoubleOrNull()
+            val date = etDate.text.toString().trim()
+            val category = spCategory.selectedItem?.toString() ?: ""
+            val notes = etNotes.text.toString().trim()
+
+            if (amount == null || amount <= 0) {
+                Toast.makeText(this, "Please enter a valid amount", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (date.isEmpty()) {
+                Toast.makeText(this, "Please select a date", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            lifecycleScope.launch {
+                expenseDao.insertExpense(
+                    Expense(
+                        amount = amount,
+                        date = date,
+                        category = category,
+                        notes = notes,
+                        hasReceipt = receiptSelected
+                    )
+                )
+
+                Toast.makeText(this@AddExpenseActivity, "Expense saved", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(this@AddExpenseActivity, FinanceActivity::class.java))
+                finish()
+            }
         }
 
         tvCancelExpense.setOnClickListener {

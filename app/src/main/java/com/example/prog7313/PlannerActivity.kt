@@ -10,8 +10,11 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class PlannerActivity : AppCompatActivity() {
 
@@ -37,6 +40,12 @@ class PlannerActivity : AppCompatActivity() {
         val btnFinance = findViewById<ImageButton>(R.id.btnFinance)
         val btnHome = findViewById<ImageButton>(R.id.btnHome)
         val btnSettings = findViewById<ImageButton>(R.id.btnSettings)
+
+        val db = AppDatabase.getDatabase(this)
+        val budgetDao = db.budgetDao()
+
+        val etBudget = findViewById<EditText>(R.id.etMonthlyGoal)
+        val btnSave = findViewById<Button>(R.id.btnSavePlan)
 
         fun parseAmount(editText: EditText): Double {
             return editText.text.toString().toDoubleOrNull() ?: 0.0
@@ -91,6 +100,21 @@ class PlannerActivity : AppCompatActivity() {
         btnSkipPlan.setOnClickListener {
             startActivity(Intent(this, DashboardActivity::class.java))
             finish()
+        }
+
+        btnSavePlan.setOnClickListener {
+            val budgetValue = parseAmount(etMonthlyGoal)
+
+            if (budgetValue > 0) {
+                lifecycleScope.launch {
+                    budgetDao.insertBudget(Budget(monthlyGoal = budgetValue))
+                    Toast.makeText(this@PlannerActivity, "Budget saved", Toast.LENGTH_SHORT).show()
+                    startActivity(Intent(this@PlannerActivity, FinanceActivity::class.java))
+                    finish()
+                }
+            } else {
+                Toast.makeText(this, "Please enter a monthly goal", Toast.LENGTH_SHORT).show()
+            }
         }
 
         btnHome.setBackgroundColor(ContextCompat.getColor(this, android.R.color.transparent))

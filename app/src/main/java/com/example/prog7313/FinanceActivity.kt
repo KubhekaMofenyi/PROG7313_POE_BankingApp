@@ -2,11 +2,14 @@ package com.example.prog7313
 
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.BarData
@@ -15,6 +18,8 @@ import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import kotlinx.coroutines.launch
 
 class FinanceActivity : AppCompatActivity() {
 
@@ -31,50 +36,112 @@ class FinanceActivity : AppCompatActivity() {
         val cardQuickAddExpense = findViewById<LinearLayout>(R.id.cardQuickAddExpense)
         val cardMonthlyPlanner = findViewById<LinearLayout>(R.id.cardMonthlyPlanner)
 
-        val pieEntries = arrayListOf<PieEntry>(
-            PieEntry(850f, "Groceries"),
-            PieEntry(420f, "Transport"),
-            PieEntry(1300f, "Bills"),
-            PieEntry(200f, "Entertainment")
-        )
+        val tvTotal = findViewById<TextView>(R.id.tvFinanceTotal)
+        val tvAvailable = findViewById<TextView>(R.id.tvFinanceAvailable)
 
-        val pieDataSet = PieDataSet(pieEntries, "")
-        pieDataSet.colors = listOf(
-            Color.parseColor("#8E210E"),
-            Color.parseColor("#C97921"),
-            Color.parseColor("#6B2B17"),
-            Color.parseColor("#A64E2D")
-        )
-        pieDataSet.valueTextColor = Color.WHITE
-        pieDataSet.valueTextSize = 12f
+        val spendingBarChart = findViewById<BarChart>(R.id.spendingBarChart)
 
-        pieChart.data = PieData(pieDataSet)
-        pieChart.description.isEnabled = false
-        pieChart.centerText = "Expenses"
-        pieChart.setCenterTextSize(16f)
-        pieChart.setEntryLabelColor(Color.BLACK)
-        pieChart.invalidate()
+        val db = AppDatabase.getDatabase(this)
+        val expenseDao = db.expenseDao()
+        val budgetDao = db.budgetDao()
 
-        val barEntries = arrayListOf<BarEntry>(
-            BarEntry(1f, 120f),
-            BarEntry(2f, 80f),
-            BarEntry(3f, 150f),
-            BarEntry(4f, 60f),
-            BarEntry(5f, 200f),
-            BarEntry(6f, 300f),
-            BarEntry(7f, 250f)
-        )
+        //pie chart
+        lifecycleScope.launch {
+            val categoryTotals = expenseDao.getCategoryTotals()
 
-        val barDataSet = BarDataSet(barEntries, "Daily Spend")
-        barDataSet.color = Color.parseColor("#C97921")
-        barDataSet.valueTextColor = Color.parseColor("#1F1F1F")
-        barDataSet.valueTextSize = 10f
+            //percentages
+            val total = categoryTotals.sumOf { it.total }
 
-        val barData = BarData(barDataSet)
-        barChart.data = barData
-        barChart.description.isEnabled = false
-        barChart.legend.isEnabled = false
-        barChart.invalidate()
+            //categories
+            val categoryListLayout = findViewById<LinearLayout>(R.id.cardCategoryList)
+            categoryListLayout.removeAllViews()
+
+            categoryTotals.forEach {
+                val textView = TextView(this@FinanceActivity)
+                val percentage = if (total > 0) (it.total / total) * 100 else 0.0
+                textView.text = "${it.category} – R%,.0f (%.0f%%)".format(it.total, percentage)
+                textView.setTextColor(Color.parseColor("#FDEDE9"))
+                textView.textSize = 14f
+
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                params.topMargin = 10
+
+                textView.layoutParams = params
+
+                categoryListLayout.addView(textView)
+
+                val maxCategory = categoryTotals.maxByOrNull { it.total }
+
+                if (it == maxCategory) {
+                    textView.setTypeface(null, Typeface.BOLD)
+                }
+            }
+
+            //pie chart
+            val entries = categoryTotals.map {
+                PieEntry(it.total.toFloat(), it.category)
+            }
+
+            val dataSet = PieDataSet(entries, "Expenses")
+
+            dataSet.colors = listOf(
+                Color.parseColor("#8E210E"),
+                Color.parseColor("#C77921"),
+                Color.parseColor("#6B2E17"),
+                Color.parseColor("#A64E2D")
+            )
+
+            dataSet.valueTextColor = Color.WHITE
+            dataSet.valueTextSize = 12f
+
+            val pieData = PieData(dataSet)
+
+            pieChart.data = pieData
+            pieChart.description.isEnabled = false
+            pieChart.centerText = "Expenses"
+            pieChart.invalidate()
+        }
+
+        //bar chart
+        lifecycleScope.launch {
+            val dailyTotals = expenseDao.getDailyTotals()
+            val labels = dailyTotals.map { it.date }
+
+            val entries = dailyTotals.mapIndexed { index, item ->
+                BarEntry(index.toFloat(), item.total.toFloat())
+            }
+
+            val dataSet = BarDataSet(entries, "Daily Spend")
+            dataSet.color = Color.parseColor("#C77921")
+            dataSet.valueTextColor = Color.parseColor("#1F1F1F")
+
+            val barData = BarData(dataSet)
+
+            spendingBarChart.data = barData
+            val xAxis = spendingBarChart.xAxis
+            xAxis.valueFormatter = IndexAxisValueFormatter(labels)
+            xAxis.granularity = 1f
+            xAxis.setDrawGridLines(false)
+            xAxis.position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
+
+            spendingBarChart.description.isEnabled = false
+            spendingBarChart.invalidate()
+        }
+
+
+        lifecycleScope.launch {
+            val budget = budgetDao.getBudget()
+            val totalBalance = budget?.monthlyGoal ?: 0.0
+
+            val totalSpent = expenseDao.getTotalSpent() ?: 0.0
+            val remaining = totalBalance - totalSpent
+
+            tvTotal.text = "R%,.0f".format(totalBalance)
+            tvAvailable.text = "R%,.0f".format(remaining)
+        }
 
         btnFinance.setBackgroundResource(R.drawable.bg_nav_selected)
         btnHome.setBackgroundColor(ContextCompat.getColor(this, android.R.color.transparent))
