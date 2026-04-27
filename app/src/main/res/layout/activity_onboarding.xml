@@ -17,7 +17,7 @@
         android:layout_marginBottom="32dp"
         android:background="@drawable/bg_card_white"
         android:elevation="5dp"
-        android:gravity="center_horizontal"
+        android:gravity="center"
         android:orientation="vertical"
         android:padding="24dp"
         app:layout_constraintBottom_toTopOf="@id/buttonRow"
@@ -27,10 +27,13 @@
 
         <ImageView
             android:id="@+id/ivOnboardingIcon"
-            android:layout_width="88dp"
-            android:layout_height="88dp"
+            android:layout_width="140dp"
+            android:layout_height="140dp"
             android:layout_marginTop="20dp"
-            android:src="@drawable/ic_trophy" />
+            android:adjustViewBounds="true"
+            android:contentDescription="Zentavo logo"
+            android:scaleType="centerInside"
+            android:src="@drawable/zentavo_logo" />
 
         <TextView
             android:id="@+id/tvOnboardingTitle"
@@ -38,7 +41,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
             android:gravity="center"
-            android:text="Welcome to BudgetBuddy"
+            android:text="Welcome to Zentavo"
             android:textColor="@color/text_primary"
             android:textSize="26sp"
             android:textStyle="bold" />
@@ -49,7 +52,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:gravity="center"
-            android:text="Manage your money with a clearer, smarter budgeting experience."
+            android:text="Your personal budgeting companion for tracking expenses, setting goals, and building better financial habits."
             android:textColor="@color/text_secondary"
             android:textSize="16sp" />
 
@@ -88,8 +91,8 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
-        android:layout_marginBottom="28dp"
-        android:gravity="center_vertical"
+        android:layout_marginBottom="48dp"
+        android:gravity="center"
         android:orientation="horizontal"
         android:weightSum="2"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -99,21 +102,23 @@
         <Button
             android:id="@+id/btnSkip"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="50dp"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
             android:backgroundTint="@color/accent_orange"
             android:text="Skip"
+            android:textAllCaps="false"
             android:textColor="@android:color/white" />
 
         <Button
             android:id="@+id/btnNext"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="50dp"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
             android:backgroundTint="@color/primary_red"
             android:text="Next"
+            android:textAllCaps="false"
             android:textColor="@android:color/white" />
     </LinearLayout>
 

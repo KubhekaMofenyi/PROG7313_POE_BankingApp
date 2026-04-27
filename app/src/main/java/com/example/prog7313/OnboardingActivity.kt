@@ -2,10 +2,11 @@ package com.example.prog7313
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 
 class OnboardingActivity : AppCompatActivity() {
@@ -29,15 +30,15 @@ class OnboardingActivity : AppCompatActivity() {
     )
 
     private val descriptions = listOf(
-        "Manage your money with a clearer, smarter budgeting experience.",
+        "Your personal budgeting companion for tracking expenses, setting goals, and building better financial habits.",
         "Set a monthly goal and allocate spending limits by category.",
         "Track progress, view insights, and earn rewards for good budgeting habits."
     )
 
     private val icons = listOf(
-        R.drawable.ic_home_circle,
-        R.drawable.ic_bill,
-        R.drawable.ic_trophy
+        R.drawable.zentavo_logo,
+        R.drawable.zentavo_logo,
+        R.drawable.zentavo_logo
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,21 +76,71 @@ class OnboardingActivity : AppCompatActivity() {
         tvDescription.text = descriptions[currentPage]
         ivIcon.setImageResource(icons[currentPage])
 
+        ivIcon.alpha = 0f
+        ivIcon.animate()
+            .alpha(1f)
+            .setDuration(400)
+            .start()
+
+        tvTitle.alpha = 0f
+        tvTitle.animate()
+            .alpha(1f)
+            .setDuration(400)
+            .start()
+
+        tvDescription.alpha = 0f
+        tvDescription.animate()
+            .alpha(1f)
+            .setDuration(400)
+            .start()
+
         indicator1.setBackgroundResource(
             if (currentPage == 0) R.drawable.bg_indicator_active else R.drawable.bg_indicator_inactive
         )
+
         indicator2.setBackgroundResource(
             if (currentPage == 1) R.drawable.bg_indicator_active else R.drawable.bg_indicator_inactive
         )
+
         indicator3.setBackgroundResource(
             if (currentPage == 2) R.drawable.bg_indicator_active else R.drawable.bg_indicator_inactive
         )
 
         btnNext.text = if (currentPage == 2) "Get Started" else "Next"
+
+        val skipParams = btnSkip.layoutParams as LinearLayout.LayoutParams
+        val nextParams = btnNext.layoutParams as LinearLayout.LayoutParams
+
+        if (currentPage == 0) {
+            btnSkip.visibility = View.GONE
+
+            nextParams.width = 0
+            nextParams.weight = 1f
+            nextParams.marginStart = 0
+            nextParams.marginEnd = 0
+
+            btnNext.layoutParams = nextParams
+        } else {
+            btnSkip.visibility = View.VISIBLE
+
+            skipParams.width = 0
+            skipParams.weight = 1f
+            skipParams.marginEnd = 8
+
+            nextParams.width = 0
+            nextParams.weight = 1f
+            nextParams.marginStart = 8
+            nextParams.marginEnd = 0
+
+            btnSkip.layoutParams = skipParams
+            btnNext.layoutParams = nextParams
+        }
     }
 
     private fun goToLogin() {
-        startActivity(Intent(this, MainActivity::class.java))
-        finish()
+        ivIcon.postDelayed({
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+        }, 300)
     }
 }
