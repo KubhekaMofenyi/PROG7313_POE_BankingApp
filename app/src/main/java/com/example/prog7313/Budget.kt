@@ -5,6 +5,11 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class Budget(
-    @PrimaryKey val id: Int = 1, // only one budget per user for now
-    val monthlyGoal: Double
+    @PrimaryKey val id: Int = 1,
+    val monthlyGoal: Double,
+    val groceriesLimit: Double,
+    val transportLimit: Double,
+    val billsLimit: Double,
+    val entertainmentLimit: Double,
+    val otherLimit: Double
 )

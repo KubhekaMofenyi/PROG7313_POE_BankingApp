@@ -263,6 +263,24 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Budget vs Actual"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
+
+            <LinearLayout
+                android:id="@+id/budgetProgressContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card_white"
+                android:padding="16dp"/>
+
             <LinearLayout
                 android:id="@+id/cardCategoryList"
                 android:layout_width="match_parent"
@@ -272,7 +290,6 @@
                 android:elevation="5dp"
                 android:orientation="vertical"
                 android:padding="16dp">
-
 
             </LinearLayout>
 

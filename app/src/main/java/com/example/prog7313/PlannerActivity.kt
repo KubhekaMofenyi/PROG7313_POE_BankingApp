@@ -92,10 +92,6 @@ class PlannerActivity : AppCompatActivity() {
             etOther.setText("300")
         }
 
-        btnSavePlan.setOnClickListener {
-            startActivity(Intent(this, DashboardActivity::class.java))
-            finish()
-        }
 
         btnSkipPlan.setOnClickListener {
             startActivity(Intent(this, DashboardActivity::class.java))
@@ -103,17 +99,27 @@ class PlannerActivity : AppCompatActivity() {
         }
 
         btnSavePlan.setOnClickListener {
-            val budgetValue = parseAmount(etMonthlyGoal)
+            val monthlyGoal = parseAmount(etMonthlyGoal)
+            val groceries = parseAmount(etGroceries)
+            val transport = parseAmount(etTransport)
+            val bills = parseAmount(etBills)
+            val entertainment = parseAmount(etEntertainment)
+            val other = parseAmount(etOther)
 
-            if (budgetValue > 0) {
-                lifecycleScope.launch {
-                    budgetDao.insertBudget(Budget(monthlyGoal = budgetValue))
-                    Toast.makeText(this@PlannerActivity, "Budget saved", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this@PlannerActivity, FinanceActivity::class.java))
-                    finish()
-                }
-            } else {
-                Toast.makeText(this, "Please enter a monthly goal", Toast.LENGTH_SHORT).show()
+            lifecycleScope.launch {
+                budgetDao.insertBudget(
+                    Budget(
+                        monthlyGoal = monthlyGoal,
+                        groceriesLimit = groceries,
+                        transportLimit = transport,
+                        billsLimit = bills,
+                        entertainmentLimit = entertainment,
+                        otherLimit = other
+                    )
+                )
+
+                Toast.makeText(this@PlannerActivity, "Budget plan saved", Toast.LENGTH_SHORT).show()
+                finish()
             }
         }
 

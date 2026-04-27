@@ -53,6 +53,21 @@ class ExpenseHistoryActivity : AppCompatActivity() {
                 .setNegativeButton("Cancel", null)
                 .show()
         }
+
+        listView.setOnItemLongClickListener { _, _, position, _ ->
+            val selectedExpense = expenses[position]
+
+            AlertDialog.Builder(this)
+                .setTitle("Delete Expense")
+                .setMessage("Are you sure you want to delete this expense?")
+                .setPositiveButton("Yes") { _, _ ->
+                    deleteExpense(selectedExpense)
+                }
+                .setNegativeButton("No", null)
+                .show()
+
+            true
+        }
     }
 
     private fun loadExpenses() {
@@ -79,5 +94,10 @@ class ExpenseHistoryActivity : AppCompatActivity() {
             Toast.makeText(this@ExpenseHistoryActivity, "Expense deleted", Toast.LENGTH_SHORT).show()
             loadExpenses()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadExpenses()
     }
 }

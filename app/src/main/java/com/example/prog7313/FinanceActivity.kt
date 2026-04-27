@@ -23,6 +23,117 @@ import kotlinx.coroutines.launch
 
 class FinanceActivity : AppCompatActivity() {
 
+    private fun loadData() {
+        val tvTotal = findViewById<TextView>(R.id.tvFinanceTotal)
+        val tvAvailable = findViewById<TextView>(R.id.tvFinanceAvailable)
+        val pieChart = findViewById<PieChart>(R.id.expensePieChart)
+        val spendingBarChart = findViewById<BarChart>(R.id.spendingBarChart)
+
+        val db = AppDatabase.getDatabase(this)
+        val expenseDao = db.expenseDao()
+        val budgetDao = db.budgetDao()
+
+        lifecycleScope.launch {
+            val budget = budgetDao.getBudget()
+            val totalBalance = budget?.monthlyGoal ?: 0.0
+            val totalSpent = expenseDao.getTotalSpent() ?: 0.0
+            val remaining = totalBalance - totalSpent
+
+            tvTotal.text = "R%,.0f".format(totalBalance)
+            tvAvailable.text = "R%,.0f".format(remaining)
+
+            val categoryTotals = expenseDao.getCategoryTotals()
+
+            val pieEntries = categoryTotals.map {
+                PieEntry(it.total.toFloat(), it.category)
+            }
+
+            val pieDataSet = PieDataSet(pieEntries, "Expenses")
+            pieDataSet.colors = listOf(
+                Color.parseColor("#8E210E"),
+                Color.parseColor("#C77921"),
+                Color.parseColor("#6B2E17"),
+                Color.parseColor("#A64E2D")
+            )
+            pieDataSet.valueTextColor = Color.WHITE
+            pieDataSet.valueTextSize = 12f
+
+            pieChart.data = PieData(pieDataSet)
+            pieChart.description.isEnabled = false
+            pieChart.centerText = "Expenses"
+            pieChart.invalidate()
+
+            val dailyTotals = expenseDao.getDailyTotals()
+            val labels = dailyTotals.map { it.date }
+
+            val barEntries = dailyTotals.mapIndexed { index, item ->
+                BarEntry(index.toFloat(), item.total.toFloat())
+            }
+
+            val barDataSet = BarDataSet(barEntries, "Daily Spend")
+            barDataSet.color = Color.parseColor("#C77921")
+            barDataSet.valueTextColor = Color.parseColor("#1F1F1F")
+
+            spendingBarChart.data = BarData(barDataSet)
+            spendingBarChart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
+            spendingBarChart.xAxis.granularity = 1f
+            spendingBarChart.description.isEnabled = false
+            spendingBarChart.invalidate()
+
+            // CATEGORY LIST
+            val categoryListLayout = findViewById<LinearLayout>(R.id.cardCategoryList)
+            categoryListLayout.removeAllViews()
+
+            val total = categoryTotals.sumOf { it.total }
+
+            categoryTotals.forEach {
+                val textView = TextView(this@FinanceActivity)
+                val percentage = if (total > 0) (it.total / total) * 100 else 0.0
+
+                textView.text = "${it.category} – R%,.0f (%.0f%%)".format(it.total, percentage)
+                textView.setTextColor(Color.parseColor("#FDEDE9"))
+                textView.textSize = 14f
+
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                params.topMargin = 10
+                textView.layoutParams = params
+
+                categoryListLayout.addView(textView)
+            }
+
+            val container = findViewById<LinearLayout>(R.id.budgetProgressContainer)
+            container.removeAllViews()
+
+            val categories = listOf(
+                "Groceries" to budget?.groceriesLimit,
+                "Transport" to budget?.transportLimit,
+                "Bills" to budget?.billsLimit,
+                "Entertainment" to budget?.entertainmentLimit,
+                "Other" to budget?.otherLimit
+            )
+
+            for ((category, limit) in categories) {
+                val spent = expenseDao.getSpentByCategory(category) ?: 0.0
+
+                val textView = TextView(this@FinanceActivity)
+                textView.text = "$category: R%.0f / R%.0f".format(spent, limit ?: 0.0)
+                textView.textSize = 14f
+
+                when {
+                    limit == null || limit == 0.0 -> textView.setTextColor(Color.GRAY)
+                    spent > limit -> textView.setTextColor(Color.RED)
+                    spent > limit * 0.8 -> textView.setTextColor(Color.parseColor("#FF9800"))
+                    else -> textView.setTextColor(Color.parseColor("#2E7D32"))
+                }
+
+                container.addView(textView)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_finance)
@@ -44,92 +155,6 @@ class FinanceActivity : AppCompatActivity() {
         val db = AppDatabase.getDatabase(this)
         val expenseDao = db.expenseDao()
         val budgetDao = db.budgetDao()
-
-        //pie chart
-        lifecycleScope.launch {
-            val categoryTotals = expenseDao.getCategoryTotals()
-
-            //percentages
-            val total = categoryTotals.sumOf { it.total }
-
-            //categories
-            val categoryListLayout = findViewById<LinearLayout>(R.id.cardCategoryList)
-            categoryListLayout.removeAllViews()
-
-            categoryTotals.forEach {
-                val textView = TextView(this@FinanceActivity)
-                val percentage = if (total > 0) (it.total / total) * 100 else 0.0
-                textView.text = "${it.category} – R%,.0f (%.0f%%)".format(it.total, percentage)
-                textView.setTextColor(Color.parseColor("#FDEDE9"))
-                textView.textSize = 14f
-
-                val params = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-                params.topMargin = 10
-
-                textView.layoutParams = params
-
-                categoryListLayout.addView(textView)
-
-                val maxCategory = categoryTotals.maxByOrNull { it.total }
-
-                if (it == maxCategory) {
-                    textView.setTypeface(null, Typeface.BOLD)
-                }
-            }
-
-            //pie chart
-            val entries = categoryTotals.map {
-                PieEntry(it.total.toFloat(), it.category)
-            }
-
-            val dataSet = PieDataSet(entries, "Expenses")
-
-            dataSet.colors = listOf(
-                Color.parseColor("#8E210E"),
-                Color.parseColor("#C77921"),
-                Color.parseColor("#6B2E17"),
-                Color.parseColor("#A64E2D")
-            )
-
-            dataSet.valueTextColor = Color.WHITE
-            dataSet.valueTextSize = 12f
-
-            val pieData = PieData(dataSet)
-
-            pieChart.data = pieData
-            pieChart.description.isEnabled = false
-            pieChart.centerText = "Expenses"
-            pieChart.invalidate()
-        }
-
-        //bar chart
-        lifecycleScope.launch {
-            val dailyTotals = expenseDao.getDailyTotals()
-            val labels = dailyTotals.map { it.date }
-
-            val entries = dailyTotals.mapIndexed { index, item ->
-                BarEntry(index.toFloat(), item.total.toFloat())
-            }
-
-            val dataSet = BarDataSet(entries, "Daily Spend")
-            dataSet.color = Color.parseColor("#C77921")
-            dataSet.valueTextColor = Color.parseColor("#1F1F1F")
-
-            val barData = BarData(dataSet)
-
-            spendingBarChart.data = barData
-            val xAxis = spendingBarChart.xAxis
-            xAxis.valueFormatter = IndexAxisValueFormatter(labels)
-            xAxis.granularity = 1f
-            xAxis.setDrawGridLines(false)
-            xAxis.position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
-
-            spendingBarChart.description.isEnabled = false
-            spendingBarChart.invalidate()
-        }
 
         loadData()
 
@@ -162,26 +187,6 @@ class FinanceActivity : AppCompatActivity() {
         btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
             finish()
-        }
-    }
-
-    private fun loadData() {
-        val db = AppDatabase.getDatabase(this)
-        val expenseDao = db.expenseDao()
-        val budgetDao = db.budgetDao()
-
-        lifecycleScope.launch {
-            val budget = budgetDao.getBudget()
-            val totalBalance = budget?.monthlyGoal ?: 0.0
-
-            val totalSpent = expenseDao.getTotalSpent() ?: 0.0
-            val remaining = totalBalance - totalSpent
-
-            val tvTotal = findViewById<TextView>(R.id.tvFinanceTotal)
-            val tvAvailable = findViewById<TextView>(R.id.tvFinanceAvailable)
-
-            tvTotal.text = "R%,.0f".format(totalBalance)
-            tvAvailable.text = "R%,.0f".format(remaining)
         }
     }
 
