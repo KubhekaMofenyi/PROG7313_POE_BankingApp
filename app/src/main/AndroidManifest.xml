@@ -13,7 +13,7 @@
         android:theme="@style/Theme.PROG7313">
 
         <activity
-            android:name=".OnboardingActivity"
+            android:name=".SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -21,6 +21,7 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".OnboardingActivity" />
         <activity android:name=".MainActivity" />
         <activity android:name=".DashboardActivity" />
         <activity android:name=".FinanceActivity" />
@@ -31,6 +32,7 @@
         <activity android:name=".GamificationActivity" />
         <activity android:name=".ExpenseHistoryActivity" />
         <activity android:name=".ForgotPasswordActivity" />
+
     </application>
 
 </manifest>
