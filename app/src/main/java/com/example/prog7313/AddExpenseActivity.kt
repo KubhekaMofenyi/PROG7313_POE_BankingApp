@@ -23,6 +23,8 @@ import java.util.Calendar
 
 class AddExpenseActivity : AppCompatActivity() {
 
+    private var editingExpenseId: Int? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_expense)
@@ -158,35 +160,51 @@ class AddExpenseActivity : AppCompatActivity() {
             tvOverspendWarning.text = "Receipt selected."
         }
 
+        editingExpenseId = intent.getIntExtra("expenseId", -1).takeIf { it != -1 }
+
+        if (editingExpenseId != null) {
+            etAmount.setText(intent.getDoubleExtra("amount", 0.0).toString())
+            etDate.setText(intent.getStringExtra("date"))
+            etNotes.setText(intent.getStringExtra("notes"))
+
+            val selectedCategory = intent.getStringExtra("category")
+            val categoryIndex = categories.indexOf(selectedCategory)
+
+            if (categoryIndex >= 0) {
+                spCategory.setSelection(categoryIndex)
+            }
+
+            btnSaveExpense.text = "Update Expense"
+        }
+
         btnSaveExpense.setOnClickListener {
-            val amount = etAmount.text.toString().toDoubleOrNull()
-            val date = etDate.text.toString().trim()
-            val category = spCategory.selectedItem?.toString() ?: ""
-            val notes = etNotes.text.toString().trim()
-
-            if (amount == null || amount <= 0) {
-                Toast.makeText(this, "Please enter a valid amount", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            if (date.isEmpty()) {
-                Toast.makeText(this, "Please select a date", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+            val amount = etAmount.text.toString().toDoubleOrNull() ?: 0.0
+            val category = spCategory.selectedItem.toString()
+            val date = etDate.text.toString()
+            val notes = etNotes.text.toString()
 
             lifecycleScope.launch {
-                expenseDao.insertExpense(
-                    Expense(
+                if (editingExpenseId != null) {
+                    val updatedExpense = Expense(
+                        id = editingExpenseId!!,
                         amount = amount,
-                        date = date,
                         category = category,
-                        notes = notes,
-                        hasReceipt = receiptSelected
+                        date = date,
+                        notes = notes
                     )
-                )
+                    expenseDao.updateExpense(updatedExpense)
+                    Toast.makeText(this@AddExpenseActivity, "Expense updated", Toast.LENGTH_SHORT).show()
+                } else {
+                    val newExpense = Expense(
+                        amount = amount,
+                        category = category,
+                        date = date,
+                        notes = notes
+                    )
+                    expenseDao.insertExpense(newExpense)
+                    Toast.makeText(this@AddExpenseActivity, "Expense added", Toast.LENGTH_SHORT).show()
+                }
 
-                Toast.makeText(this@AddExpenseActivity, "Expense saved", Toast.LENGTH_SHORT).show()
-                startActivity(Intent(this@AddExpenseActivity, FinanceActivity::class.java))
                 finish()
             }
         }

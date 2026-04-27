@@ -41,45 +41,7 @@ class DashboardActivity : AppCompatActivity() {
         val expenseDao = db.expenseDao()
         val budgetDao = db.budgetDao()
 
-        lifecycleScope.launch {
-            val budget = budgetDao.getBudget()
-            val totalBalance = budget?.monthlyGoal ?: 10000.0
-
-            val totalSpent = expenseDao.getTotalSpent() ?: 0.0
-            val remaining = totalBalance - totalSpent
-
-            val daysLeftInMonth = 22
-            val safeSpendToday = kotlin.math.max(remaining / daysLeftInMonth, 0.0)
-
-            tvTotalBalance.text = "R%,.0f".format(totalBalance)
-            tvAvailableBalance.text = "R%,.0f".format(remaining)
-            tvBudgetInfo.text = "Spent R%,.0f of R%,.0f".format(totalSpent, totalBalance)
-            tvRemaining.text = "R%,.0f".format(remaining)
-            tvSafeSpend.text = "R%,.0f".format(safeSpendToday)
-
-            progressBudget.max = totalBalance.toInt()
-            progressBudget.progress = totalSpent.toInt()
-
-            when {
-                totalSpent < totalBalance * 0.7 -> {
-                    tvBudgetStatus.text = "Excellent. You are well within budget."
-                    tvBudgetStatus.setTextColor(Color.parseColor("#2E7D32"))
-                    tvRecentTip.text = "Tip: You are spending responsibly this month."
-                }
-
-                totalSpent <= totalBalance -> {
-                    tvBudgetStatus.text = "You are managing your budget well this month."
-                    tvBudgetStatus.setTextColor(Color.parseColor("#EF6C00"))
-                    tvRecentTip.text = "Tip: Watch your spending in the next few days."
-                }
-
-                else -> {
-                    tvBudgetStatus.text = "Warning. You have exceeded your budget."
-                    tvBudgetStatus.setTextColor(Color.parseColor("#B00020"))
-                    tvRecentTip.text = "Tip: Review your recent expenses."
-                }
-            }
-        }
+        loadData()
 
         //these cards could be buttons but they cards for rn cuz the nav wont look good
         val cardGamification = findViewById<LinearLayout>(R.id.cardGamification)
@@ -134,5 +96,57 @@ class DashboardActivity : AppCompatActivity() {
         btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
+    }
+
+    private fun loadData() {
+        val tvTotalBalance = findViewById<TextView>(R.id.tvTotalBalance)
+        val tvAvailableBalance = findViewById<TextView>(R.id.tvAvailableBalance)
+        val tvBudgetInfo = findViewById<TextView>(R.id.tvBudgetInfo)
+        val tvBudgetStatus = findViewById<TextView>(R.id.tvBudgetStatus)
+        val tvRemaining = findViewById<TextView>(R.id.tvRemaining)
+        val tvSafeSpend = findViewById<TextView>(R.id.tvSafeSpend)
+        val tvOverspendingMessage = findViewById<TextView>(R.id.tvOverspendingMessage)
+        val progressBudget = findViewById<ProgressBar>(R.id.progressBudget)
+
+        val db = AppDatabase.getDatabase(this)
+        val expenseDao = db.expenseDao()
+        val budgetDao = db.budgetDao()
+
+        lifecycleScope.launch {
+            val budget = budgetDao.getBudget()
+            val totalBalance = budget?.monthlyGoal ?: 10000.0
+            val totalSpent = expenseDao.getTotalSpent() ?: 0.0
+            val remaining = totalBalance - totalSpent
+            val safeSpendToday = kotlin.math.max(remaining / 22, 0.0)
+
+            tvTotalBalance.text = "R%,.0f".format(totalBalance)
+            tvAvailableBalance.text = "R%,.0f".format(remaining)
+            tvBudgetInfo.text = "Spent R%,.0f of R%,.0f".format(totalSpent, totalBalance)
+            tvRemaining.text = "R%,.0f".format(remaining)
+            tvSafeSpend.text = "R%,.0f".format(safeSpendToday)
+
+            progressBudget.max = totalBalance.toInt()
+            progressBudget.progress = totalSpent.toInt()
+
+            when {
+                totalSpent > totalBalance -> {
+                    tvBudgetStatus.text = "Warning. You have exceeded your budget."
+                    tvOverspendingMessage.text = "You are over budget by R%,.0f.".format(totalSpent - totalBalance)
+                }
+                totalSpent >= totalBalance * 0.8 -> {
+                    tvBudgetStatus.text = "Caution. You are close to your budget limit."
+                    tvOverspendingMessage.text = "You have R%,.0f remaining this month.".format(remaining)
+                }
+                else -> {
+                    tvBudgetStatus.text = "Excellent. You are well within budget."
+                    tvOverspendingMessage.text = "You have R%,.0f available to spend.".format(remaining)
+                }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadData()
     }
 }

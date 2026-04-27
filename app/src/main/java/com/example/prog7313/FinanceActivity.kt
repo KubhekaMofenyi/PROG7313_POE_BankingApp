@@ -131,17 +131,7 @@ class FinanceActivity : AppCompatActivity() {
             spendingBarChart.invalidate()
         }
 
-
-        lifecycleScope.launch {
-            val budget = budgetDao.getBudget()
-            val totalBalance = budget?.monthlyGoal ?: 0.0
-
-            val totalSpent = expenseDao.getTotalSpent() ?: 0.0
-            val remaining = totalBalance - totalSpent
-
-            tvTotal.text = "R%,.0f".format(totalBalance)
-            tvAvailable.text = "R%,.0f".format(remaining)
-        }
+        loadData()
 
         btnFinance.setBackgroundResource(R.drawable.bg_nav_selected)
         btnHome.setBackgroundColor(ContextCompat.getColor(this, android.R.color.transparent))
@@ -173,5 +163,30 @@ class FinanceActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
             finish()
         }
+    }
+
+    private fun loadData() {
+        val db = AppDatabase.getDatabase(this)
+        val expenseDao = db.expenseDao()
+        val budgetDao = db.budgetDao()
+
+        lifecycleScope.launch {
+            val budget = budgetDao.getBudget()
+            val totalBalance = budget?.monthlyGoal ?: 0.0
+
+            val totalSpent = expenseDao.getTotalSpent() ?: 0.0
+            val remaining = totalBalance - totalSpent
+
+            val tvTotal = findViewById<TextView>(R.id.tvFinanceTotal)
+            val tvAvailable = findViewById<TextView>(R.id.tvFinanceAvailable)
+
+            tvTotal.text = "R%,.0f".format(totalBalance)
+            tvAvailable.text = "R%,.0f".format(remaining)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadData()
     }
 }
