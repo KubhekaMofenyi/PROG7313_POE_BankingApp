@@ -16,6 +16,92 @@ import kotlin.math.max
 
 class DashboardActivity : AppCompatActivity() {
 
+    private fun loadData() {
+        val tvTotalBalance = findViewById<TextView>(R.id.tvTotalBalance)
+        val tvAvailableBalance = findViewById<TextView>(R.id.tvAvailableBalance)
+        val tvBudgetInfo = findViewById<TextView>(R.id.tvBudgetInfo)
+        val tvBudgetStatus = findViewById<TextView>(R.id.tvBudgetStatus)
+        val tvRemaining = findViewById<TextView>(R.id.tvRemaining)
+        val tvSafeSpend = findViewById<TextView>(R.id.tvSafeSpend)
+        val tvOverspendingMessage = findViewById<TextView>(R.id.tvOverspendingMessage)
+        val progressBudget = findViewById<ProgressBar>(R.id.progressBudget)
+
+        val db = AppDatabase.getDatabase(this)
+        val expenseDao = db.expenseDao()
+        val budgetDao = db.budgetDao()
+
+        lifecycleScope.launch {
+            val budget = budgetDao.getBudget()
+            //not too sure if i need this line and cant remember where it went :D
+            val totalBalance = budget?.monthlyGoal ?: 0.0
+            val totalSpent = expenseDao.getTotalSpent() ?: 0.0
+
+            //consistency with finance page
+            val categoryWarnings = mutableListOf<String>()
+
+            if (budget != null) {
+                val categories = listOf(
+                    "Groceries" to budget.groceriesLimit,
+                    "Transport" to budget.transportLimit,
+                    "Bills" to budget.billsLimit,
+                    "Entertainment" to budget.entertainmentLimit,
+                    "Other" to budget.otherLimit
+                )
+
+                categories.forEach { (category, limit) ->
+                    val spent = expenseDao.getSpentByCategory(category) ?: 0.0
+
+                    if (limit > 0 && spent > limit) {
+                        categoryWarnings.add(
+                            "$category is over budget by R%,.0f.".format(spent - limit)
+                        )
+                    } else if (limit > 0 && spent >= limit * 0.8) {
+                        categoryWarnings.add(
+                            "$category is close to its limit. R%,.0f remaining.".format(limit - spent)
+                        )
+                    }
+                }
+            }
+
+            val remaining = totalBalance - totalSpent
+            val safeSpendToday = kotlin.math.max(remaining / 22, 0.0)
+
+            tvTotalBalance.text = "R%,.0f".format(totalBalance)
+            tvAvailableBalance.text = "R%,.0f".format(remaining)
+            tvBudgetInfo.text = "Spent R%,.0f of R%,.0f".format(totalSpent, totalBalance)
+            tvRemaining.text = "R%,.0f".format(remaining)
+            tvSafeSpend.text = "R%,.0f".format(safeSpendToday)
+
+            progressBudget.max = totalBalance.toInt()
+            progressBudget.progress = totalSpent.toInt()
+
+            when {
+                totalSpent > totalBalance -> {
+                    tvBudgetStatus.text = "Warning. You have exceeded your budget."
+                    tvOverspendingMessage.text = "You are over budget by R%,.0f.".format(totalSpent - totalBalance)
+                }
+                totalSpent >= totalBalance * 0.8 -> {
+                    tvBudgetStatus.text = "Caution. You are close to your budget limit."
+                    tvOverspendingMessage.text = "You have R%,.0f remaining this month.".format(remaining)
+                }
+                else -> {
+                    tvBudgetStatus.text = "Excellent. You are well within budget."
+                    tvOverspendingMessage.text = "You have R%,.0f available to spend.".format(remaining)
+                }
+            }
+
+            val cardOverspending = findViewById<LinearLayout>(R.id.cardOverspending)
+
+            if (categoryWarnings.isNotEmpty()) {
+                cardOverspending.visibility = View.VISIBLE
+                tvOverspendingMessage.text = categoryWarnings.joinToString("\n")
+            } else {
+                cardOverspending.visibility = View.VISIBLE
+                tvOverspendingMessage.text = "No category overspending detected."
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
@@ -56,11 +142,6 @@ class DashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, AddExpenseActivity::class.java))
         }
 
-        val overspendingCategory = "Transport"
-        val overspendingAmount = 150
-
-        tvOverspendingMessage.text =
-            "$overspendingCategory has exceeded its monthly category limit by R$overspendingAmount."
 
         tvInsightMessage.text =
             "You spend more on weekends than weekdays."
@@ -68,14 +149,6 @@ class DashboardActivity : AppCompatActivity() {
         tvAchievementSummary.text =
             "Streak: 7 days • Level: Bronze • Badge: Planner"
 
-        //overspending
-        val cardOverspending = findViewById<LinearLayout>(R.id.cardOverspending)
-
-        if (overspendingAmount > 0) {
-            cardOverspending.visibility = android.view.View.VISIBLE
-        } else {
-            cardOverspending.visibility = android.view.View.GONE
-        }
 
         //nav buttons linking to pages
         btnHome.setBackgroundResource(R.drawable.bg_nav_selected)
@@ -95,53 +168,6 @@ class DashboardActivity : AppCompatActivity() {
 
         btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
-        }
-    }
-
-    private fun loadData() {
-        val tvTotalBalance = findViewById<TextView>(R.id.tvTotalBalance)
-        val tvAvailableBalance = findViewById<TextView>(R.id.tvAvailableBalance)
-        val tvBudgetInfo = findViewById<TextView>(R.id.tvBudgetInfo)
-        val tvBudgetStatus = findViewById<TextView>(R.id.tvBudgetStatus)
-        val tvRemaining = findViewById<TextView>(R.id.tvRemaining)
-        val tvSafeSpend = findViewById<TextView>(R.id.tvSafeSpend)
-        val tvOverspendingMessage = findViewById<TextView>(R.id.tvOverspendingMessage)
-        val progressBudget = findViewById<ProgressBar>(R.id.progressBudget)
-
-        val db = AppDatabase.getDatabase(this)
-        val expenseDao = db.expenseDao()
-        val budgetDao = db.budgetDao()
-
-        lifecycleScope.launch {
-            val budget = budgetDao.getBudget()
-            val totalBalance = budget?.monthlyGoal ?: 10000.0
-            val totalSpent = expenseDao.getTotalSpent() ?: 0.0
-            val remaining = totalBalance - totalSpent
-            val safeSpendToday = kotlin.math.max(remaining / 22, 0.0)
-
-            tvTotalBalance.text = "R%,.0f".format(totalBalance)
-            tvAvailableBalance.text = "R%,.0f".format(remaining)
-            tvBudgetInfo.text = "Spent R%,.0f of R%,.0f".format(totalSpent, totalBalance)
-            tvRemaining.text = "R%,.0f".format(remaining)
-            tvSafeSpend.text = "R%,.0f".format(safeSpendToday)
-
-            progressBudget.max = totalBalance.toInt()
-            progressBudget.progress = totalSpent.toInt()
-
-            when {
-                totalSpent > totalBalance -> {
-                    tvBudgetStatus.text = "Warning. You have exceeded your budget."
-                    tvOverspendingMessage.text = "You are over budget by R%,.0f.".format(totalSpent - totalBalance)
-                }
-                totalSpent >= totalBalance * 0.8 -> {
-                    tvBudgetStatus.text = "Caution. You are close to your budget limit."
-                    tvOverspendingMessage.text = "You have R%,.0f remaining this month.".format(remaining)
-                }
-                else -> {
-                    tvBudgetStatus.text = "Excellent. You are well within budget."
-                    tvOverspendingMessage.text = "You have R%,.0f available to spend.".format(remaining)
-                }
-            }
         }
     }
 
