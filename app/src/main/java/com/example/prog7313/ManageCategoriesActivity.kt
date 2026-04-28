@@ -20,6 +20,7 @@ class ManageCategoriesActivity : AppCompatActivity() {
 
     private lateinit var categoryDao: CategoryDao
     private lateinit var expenseDao: ExpenseDao
+    private lateinit var categoryLimitDao: CategoryLimitDao
     private lateinit var adapter: CategoryAdapter
     private val categories = mutableListOf<Category>()
 
@@ -30,6 +31,7 @@ class ManageCategoriesActivity : AppCompatActivity() {
         val db = AppDatabase.getDatabase(this)
         categoryDao = db.categoryDao()
         expenseDao = db.expenseDao()
+        categoryLimitDao = db.categoryLimitDao()
 
         val rvCategories = findViewById<RecyclerView>(R.id.rvCategories)
         rvCategories.layoutManager = LinearLayoutManager(this)
@@ -87,7 +89,6 @@ class ManageCategoriesActivity : AppCompatActivity() {
             .show()
     }
 
-    // FIXED VERSION – reopens edit dialog after colour change
     private fun showEditDialog(category: Category) {
         var currentName = category.name
         var currentColor = category.color
@@ -126,7 +127,6 @@ class ManageCategoriesActivity : AppCompatActivity() {
                 .setNegativeButton("Cancel", null)
                 .show()
         }
-
         showEditDialogInternal()
     }
 
@@ -151,11 +151,16 @@ class ManageCategoriesActivity : AppCompatActivity() {
             .setMessage("All expenses in '${category.name}' will be moved to 'Uncategorised'. Continue?")
             .setPositiveButton("Delete") { _, _ ->
                 lifecycleScope.launch {
+                    // Ensure "Uncategorised" exists
                     var uncat = categoryDao.getCategoryByName("Uncategorised")
                     if (uncat == null) {
                         categoryDao.insertCategory(Category(name = "Uncategorised", color = "#9E9E9E"))
                     }
+                    // Reassign expenses
                     expenseDao.reassignCategory(category.name, "Uncategorised")
+                    // Delete the category limit
+                    categoryLimitDao.deleteLimitForCategory(category.name)
+                    // Delete the category
                     categoryDao.deleteCategory(category)
                     loadCategories()
                     Toast.makeText(this@ManageCategoriesActivity, "Category deleted", Toast.LENGTH_SHORT).show()

@@ -16,4 +16,13 @@ interface CategoryLimitDao {
 
     @Query("SELECT * FROM category_limits WHERE categoryName = :category LIMIT 1")
     suspend fun getLimitForCategory(category: String): CategoryLimit?
+
+    //ensure budget vs actual is up to date
+    // New: delete limit when category is deleted
+    @Query("DELETE FROM category_limits WHERE categoryName = :categoryName")
+    suspend fun deleteLimitForCategory(categoryName: String)
+
+    // New: Update limit's category name when the user renames a category
+    @Query("UPDATE category_limits SET categoryName = :newName WHERE categoryName = :oldName")
+    suspend fun updateCategoryNameInLimits(oldName: String, newName: String)
 }

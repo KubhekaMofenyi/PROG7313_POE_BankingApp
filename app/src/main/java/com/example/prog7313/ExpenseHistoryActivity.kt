@@ -26,7 +26,7 @@ class ExpenseHistoryActivity : AppCompatActivity() {
     private lateinit var btnApplyFilter: Button
     private lateinit var btnClearFilters: Button
 
-    private lateinit var allExpenses: List<Expense>   // full list from DB
+    private lateinit var allExpenses: List<Expense>
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,23 +45,17 @@ class ExpenseHistoryActivity : AppCompatActivity() {
         expenseDao = db.expenseDao()
         categoryDao = db.categoryDao()
 
-        setupDatePickers()      // no auto-apply inside
+        setupDatePickers()
         loadCategorySpinner()
-        loadAllExpenses()       // load once
+        loadAllExpenses()
 
-        // Real-time keyword search (optional, but convenient)
         etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) {
-                applyFilters()   // apply on each keystroke
-            }
+            override fun afterTextChanged(s: Editable?) { applyFilters() }
         })
 
-        btnApplyFilter.setOnClickListener {
-            applyFilters()
-        }
-
+        btnApplyFilter.setOnClickListener { applyFilters() }
         btnClearFilters.setOnClickListener {
             etSearch.setText("")
             spCategoryFilter.setSelection(0)
@@ -70,12 +64,23 @@ class ExpenseHistoryActivity : AppCompatActivity() {
             applyFilters()
         }
 
+        // Handle preset category from FinanceActivity
+        val presetCategory = intent.getStringExtra("presetCategory")
+        if (presetCategory != null) {
+            spCategoryFilter.post {
+                val adapter = spCategoryFilter.adapter as? ArrayAdapter<String>
+                val position = (0 until (adapter?.count ?: 0)).firstOrNull { adapter?.getItem(it) == presetCategory } ?: -1
+                if (position >= 0) {
+                    spCategoryFilter.setSelection(position)
+                    applyFilters()
+                }
+            }
+        }
+
         listView.setOnItemClickListener { _, _, position, _ ->
             val adapter = listView.adapter as? ExpenseAdapter
             val selectedExpense = adapter?.getItem(position)
-            if (selectedExpense != null) {
-                showExpenseOptions(selectedExpense)
-            }
+            if (selectedExpense != null) showExpenseOptions(selectedExpense)
         }
 
         listView.setOnItemLongClickListener { _, _, position, _ ->
@@ -96,7 +101,6 @@ class ExpenseHistoryActivity : AppCompatActivity() {
                 { _, year, month, dayOfMonth ->
                     val date = String.format(Locale.getDefault(), "%02d/%02d/%d", dayOfMonth, month + 1, year)
                     editText.setText(date)
-                    // Do NOT call applyFilters() here – wait for user to click Apply
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
@@ -120,7 +124,7 @@ class ExpenseHistoryActivity : AppCompatActivity() {
     private fun loadAllExpenses() {
         lifecycleScope.launch {
             allExpenses = expenseDao.getAllExpenses().sortedByDescending { it.date }
-            applyFilters()  // initial display
+            applyFilters()
         }
     }
 
@@ -133,29 +137,18 @@ class ExpenseHistoryActivity : AppCompatActivity() {
         val startDateStr = etStartDate.text.toString().trim()
         val endDateStr = etEndDate.text.toString().trim()
 
-        // Parse start and end dates if provided
-        val startDate = try {
-            if (startDateStr.isNotEmpty()) dateFormat.parse(startDateStr) else null
-        } catch (e: Exception) { null }
-        val endDate = try {
-            if (endDateStr.isNotEmpty()) dateFormat.parse(endDateStr) else null
-        } catch (e: Exception) { null }
+        val startDate = try { if (startDateStr.isNotEmpty()) dateFormat.parse(startDateStr) else null } catch (e: Exception) { null }
+        val endDate = try { if (endDateStr.isNotEmpty()) dateFormat.parse(endDateStr) else null } catch (e: Exception) { null }
 
         val filtered = allExpenses.filter { expense ->
-            // keyword filter
             val matchesKeyword = keyword.isEmpty() ||
                     expense.category.lowercase().contains(keyword) ||
                     expense.notes.lowercase().contains(keyword) ||
                     expense.date.lowercase().contains(keyword)
 
-            // category filter
             val matchesCategory = category == null || expense.category == category
 
-            // date range filter
-            val expenseDate = try {
-                dateFormat.parse(expense.date)
-            } catch (e: Exception) { null }
-
+            val expenseDate = try { dateFormat.parse(expense.date) } catch (e: Exception) { null }
             val matchesDateRange = when {
                 expenseDate == null -> false
                 startDate != null && endDate != null -> expenseDate >= startDate && expenseDate <= endDate
@@ -163,7 +156,6 @@ class ExpenseHistoryActivity : AppCompatActivity() {
                 endDate != null -> expenseDate <= endDate
                 else -> true
             }
-
             matchesKeyword && matchesCategory && matchesDateRange
         }
 
@@ -173,11 +165,7 @@ class ExpenseHistoryActivity : AppCompatActivity() {
     private fun showExpenseOptions(expense: Expense) {
         AlertDialog.Builder(this)
             .setTitle("Expense Options")
-            .setMessage(
-                "Category: ${expense.category}\n" +
-                        "Amount: R%,.0f\n".format(expense.amount) +
-                        "Date: ${expense.date}"
-            )
+            .setMessage("Category: ${expense.category}\nAmount: R%,.0f\nDate: ${expense.date}".format(expense.amount))
             .setPositiveButton("Edit") { _, _ ->
                 val intent = Intent(this, AddExpenseActivity::class.java)
                 intent.putExtra("expenseId", expense.id)
@@ -188,9 +176,7 @@ class ExpenseHistoryActivity : AppCompatActivity() {
                 intent.putExtra("receiptUri", expense.receiptUri)
                 startActivity(intent)
             }
-            .setNeutralButton("Delete") { _, _ ->
-                confirmDelete(expense)
-            }
+            .setNeutralButton("Delete") { _, _ -> confirmDelete(expense) }
             .setNegativeButton("Cancel", null)
             .show()
     }
@@ -199,9 +185,7 @@ class ExpenseHistoryActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Delete Expense")
             .setMessage("Are you sure you want to delete this expense?")
-            .setPositiveButton("Yes") { _, _ ->
-                deleteExpense(expense)
-            }
+            .setPositiveButton("Yes") { _, _ -> deleteExpense(expense) }
             .setNegativeButton("No", null)
             .show()
     }
@@ -210,13 +194,13 @@ class ExpenseHistoryActivity : AppCompatActivity() {
         lifecycleScope.launch {
             expenseDao.deleteExpenseById(expense.id)
             Toast.makeText(this@ExpenseHistoryActivity, "Expense deleted", Toast.LENGTH_SHORT).show()
-            loadAllExpenses() // reload and re-filter
+            loadAllExpenses()
         }
     }
 
     override fun onResume() {
         super.onResume()
         loadCategorySpinner()
-        loadAllExpenses() // refresh when returning from edit
+        loadAllExpenses()
     }
 }
