@@ -47,6 +47,7 @@ class AddExpenseActivity : AppCompatActivity() {
 
         val db = AppDatabase.getDatabase(this)
         val expenseDao = db.expenseDao()
+        val budgetDao = db.budgetDao()
 
         val categories = listOf("Groceries", "Transport", "Bills", "Entertainment", "Other")
         val spinnerAdapter = ArrayAdapter(
@@ -57,23 +58,6 @@ class AddExpenseActivity : AppCompatActivity() {
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spCategory.adapter = spinnerAdapter
 
-        // Sample prototype data
-        val categoryLimits = mapOf(
-            "Groceries" to 1200.0,
-            "Transport" to 800.0,
-            "Bills" to 1500.0,
-            "Entertainment" to 700.0,
-            "Other" to 300.0
-        )
-
-        val currentSpent = mapOf(
-            "Groceries" to 850.0,
-            "Transport" to 420.0,
-            "Bills" to 1300.0,
-            "Entertainment" to 200.0,
-            "Other" to 100.0
-        )
-
         fun updateWarning() {
             val amount = etAmount.text.toString().toDoubleOrNull() ?: 0.0
             val category = spCategory.selectedItem?.toString() ?: return
@@ -83,35 +67,47 @@ class AddExpenseActivity : AppCompatActivity() {
                 return
             }
 
-            val limit = categoryLimits[category] ?: 0.0
-            val spent = currentSpent[category] ?: 0.0
-            val projected = spent + amount
-            val remaining = limit - projected
+            lifecycleScope.launch {
+                val budget = budgetDao.getBudget()
 
-            cardWarning.visibility = View.VISIBLE
-
-            when {
-                remaining < 0 -> {
-                    cardWarning.setBackgroundResource(R.drawable.bg_card_secondary)
-                    tvOverspendWarning.setTextColor(Color.WHITE)
-                    tvOverspendWarning.text =
-                        "Overspending warning. This will exceed $category by R%.0f.".format(-remaining)
+                val limit = when (category) {
+                    "Groceries" -> budget?.groceriesLimit ?: 0.0
+                    "Transport" -> budget?.transportLimit ?: 0.0
+                    "Bills" -> budget?.billsLimit ?: 0.0
+                    "Entertainment" -> budget?.entertainmentLimit ?: 0.0
+                    "Other" -> budget?.otherLimit ?: 0.0
+                    else -> 0.0
                 }
 
-                remaining <= 100 -> {
-                    cardWarning.setBackgroundResource(R.drawable.bg_card_secondary)
-                    tvOverspendWarning.setTextColor(Color.WHITE)
-                    tvOverspendWarning.text =
-                        "Approaching limit. R%.0f will remain in $category after this expense.".format(remaining)
+                val spent = expenseDao.getSpentByCategory(category) ?: 0.0
+                val projected = spent + amount
+                val remaining = limit - projected
+
+                if (limit <= 0.0) {
+                    cardWarning.visibility = View.GONE
+                    return@launch
                 }
 
-                else -> {
-                    cardWarning.setBackgroundResource(R.drawable.bg_card_white)
-                    tvOverspendWarning.setTextColor(
-                        ContextCompat.getColor(this, R.color.text_primary)
-                    )
-                    tvOverspendWarning.text =
-                        "Within budget. R%.0f will remain in $category after this expense.".format(remaining)
+                when {
+                    remaining < 0 -> {
+                        cardWarning.visibility = View.VISIBLE
+                        cardWarning.setBackgroundResource(R.drawable.bg_card_secondary)
+                        tvOverspendWarning.setTextColor(Color.WHITE)
+                        tvOverspendWarning.text =
+                            "Overspending! You exceed $category by R%.0f.".format(-remaining)
+                    }
+
+                    remaining <= limit * 0.2 -> {
+                        cardWarning.visibility = View.VISIBLE
+                        cardWarning.setBackgroundResource(R.drawable.bg_card_secondary)
+                        tvOverspendWarning.setTextColor(Color.WHITE)
+                        tvOverspendWarning.text =
+                            "Warning: Only R%.0f left in $category after this expense.".format(remaining)
+                    }
+
+                    else -> {
+                        cardWarning.visibility = View.GONE
+                    }
                 }
             }
         }
