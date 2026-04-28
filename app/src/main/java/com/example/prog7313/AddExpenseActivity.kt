@@ -8,15 +8,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.LinearLayout
-import android.widget.Spinner
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -25,17 +17,15 @@ import java.util.Calendar
 
 class AddExpenseActivity : AppCompatActivity() {
 
-    //temp..kinda...if it works it works
     private lateinit var expenseDao: ExpenseDao
     private lateinit var budgetDao: BudgetDao
     private lateinit var categoryDao: CategoryDao
-    private lateinit var spCategory: Spinner
     private lateinit var categoryLimitDao: CategoryLimitDao
-
-    var receiptSelected = false
+    private lateinit var spCategory: Spinner
 
     private var editingExpenseId: Int? = null
     private var selectedReceiptUri: String? = null
+    private var categoryNames = mutableListOf<String>()
 
     private fun showAddCategoryDialog() {
         val input = EditText(this)
@@ -50,18 +40,7 @@ class AddExpenseActivity : AppCompatActivity() {
                 if (newCategory.isNotEmpty()) {
                     lifecycleScope.launch {
                         categoryDao.insertCategory(Category(name = newCategory))
-
-                        // reload spinner
-                        loadCategories()
-
-                        spCategory.post {
-                            val adapter = spCategory.adapter
-                            val position = (adapter as ArrayAdapter<String>).getPosition(newCategory)
-                            if (position >= 0) {
-                                spCategory.setSelection(position)
-                            }
-                        }
-
+                        loadCategories(newCategory)
                         Toast.makeText(this@AddExpenseActivity, "Category added", Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -70,66 +49,7 @@ class AddExpenseActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun loadCategories() {
-        lifecycleScope.launch {
-            var categories = categoryDao.getAllCategories()
-
-            if (categories.isEmpty()) {
-                listOf("Groceries", "Transport", "Bills", "Entertainment", "Other").forEach {
-                    categoryDao.insertCategory(Category(name = it))
-                }
-
-                categories = categoryDao.getAllCategories()
-            }
-
-            val categoryNames = categories.map { it.name }
-
-            val spinnerAdapter = ArrayAdapter(
-                this@AddExpenseActivity,
-                android.R.layout.simple_spinner_item,
-                categoryNames
-            )
-
-            spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            spCategory.adapter = spinnerAdapter
-        }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_add_expense)
-
-        //database callings
-        val db = AppDatabase.getDatabase(this)
-        expenseDao = db.expenseDao()
-        budgetDao = db.budgetDao()
-        categoryDao = db.categoryDao()
-        categoryLimitDao = db.categoryLimitDao()
-
-        spCategory = findViewById(R.id.spCategory)
-
-        //da load
-        loadCategories()
-
-        //variable callings
-        val etAmount = findViewById<EditText>(R.id.etAmount)
-        val etDate = findViewById<EditText>(R.id.etDate)
-        val spCategory = findViewById<Spinner>(R.id.spCategory)
-        val btnSaveExpense = findViewById<Button>(R.id.btnSaveExpense)
-        val tvCancelExpense = findViewById<TextView>(R.id.tvCancelExpense)
-        val cardReceipt = findViewById<LinearLayout>(R.id.cardReceipt)
-        val cardWarning = findViewById<LinearLayout>(R.id.cardWarning)
-        val tvOverspendWarning = findViewById<TextView>(R.id.tvOverspendWarning)
-
-        //button callings
-        val btnFinance = findViewById<ImageButton>(R.id.btnFinance)
-        val btnHome = findViewById<ImageButton>(R.id.btnHome)
-        val btnSettings = findViewById<ImageButton>(R.id.btnSettings)
-
-        //extra extra read all about it
-        val etNotes = findViewById<EditText>(R.id.etNotes)
-
-        var categoryNames = mutableListOf<String>()
+    private fun loadCategories(selectCategory: String? = null) {
         lifecycleScope.launch {
             var categories = categoryDao.getAllCategories()
 
@@ -140,7 +60,7 @@ class AddExpenseActivity : AppCompatActivity() {
                 categories = categoryDao.getAllCategories()
             }
 
-            categoryNames = categories.map { it.name }.toMutableList()
+            categoryNames = categories.map { it.name }.distinct().toMutableList()
             categoryNames.add("+ Add Category")
 
             val spinnerAdapter = ArrayAdapter(
@@ -152,50 +72,59 @@ class AddExpenseActivity : AppCompatActivity() {
             spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             spCategory.adapter = spinnerAdapter
 
-            spCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-
-                    val selected = categoryNames[position]
-
-                    if (selected == "+ Add Category") {
-                        showAddCategoryDialog()
-                    }
-                }
-
-                override fun onNothingSelected(parent: AdapterView<*>) {}
-            }
-
-            val selectedCategory = intent.getStringExtra("category")
-            val categoryIndex = categoryNames.indexOf(selectedCategory)
-
-            if (categoryIndex >= 0) {
-                spCategory.setSelection(categoryIndex)
+            selectCategory?.let {
+                val index = categoryNames.indexOf(it)
+                if (index >= 0) spCategory.setSelection(index)
             }
         }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_add_expense)
+
+        val db = AppDatabase.getDatabase(this)
+        expenseDao = db.expenseDao()
+        budgetDao = db.budgetDao()
+        categoryDao = db.categoryDao()
+        categoryLimitDao = db.categoryLimitDao()
+
+        val etAmount = findViewById<EditText>(R.id.etAmount)
+        val etDate = findViewById<EditText>(R.id.etDate)
+        spCategory = findViewById(R.id.spCategory)
+
+        val btnSaveExpense = findViewById<Button>(R.id.btnSaveExpense)
+        val tvCancelExpense = findViewById<TextView>(R.id.tvCancelExpense)
+        val cardReceipt = findViewById<LinearLayout>(R.id.cardReceipt)
+        val cardWarning = findViewById<LinearLayout>(R.id.cardWarning)
+        val tvOverspendWarning = findViewById<TextView>(R.id.tvOverspendWarning)
+        val etNotes = findViewById<EditText>(R.id.etNotes)
+
+        val btnFinance = findViewById<ImageButton>(R.id.btnFinance)
+        val btnHome = findViewById<ImageButton>(R.id.btnHome)
+        val btnSettings = findViewById<ImageButton>(R.id.btnSettings)
 
         fun updateWarning() {
             val amount = etAmount.text.toString().toDoubleOrNull() ?: 0.0
             val category = spCategory.selectedItem?.toString() ?: return
 
-            if (amount <= 0.0) {
+            if (amount <= 0.0 || category == "+ Add Category") {
                 cardWarning.visibility = View.GONE
                 return
             }
 
             lifecycleScope.launch {
-                val budget = budgetDao.getBudget()
-
                 val categoryLimit = categoryLimitDao.getLimitForCategory(category)
                 val limit = categoryLimit?.limitAmount ?: 0.0
-
-                val spent = expenseDao.getSpentByCategory(category) ?: 0.0
-                val projected = spent + amount
-                val remaining = limit - projected
 
                 if (limit <= 0.0) {
                     cardWarning.visibility = View.GONE
                     return@launch
                 }
+
+                val spent = expenseDao.getSpentByCategory(category) ?: 0.0
+                val projected = spent + amount
+                val remaining = limit - projected
 
                 when {
                     remaining < 0 -> {
@@ -221,6 +150,33 @@ class AddExpenseActivity : AppCompatActivity() {
             }
         }
 
+        spCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                val selected = categoryNames.getOrNull(position) ?: return
+
+                if (selected == "+ Add Category") {
+                    showAddCategoryDialog()
+                } else {
+                    updateWarning()
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+
+        editingExpenseId = intent.getIntExtra("expenseId", -1).takeIf { it != -1 }
+
+        val selectedCategoryFromIntent = intent.getStringExtra("category")
+        loadCategories(selectedCategoryFromIntent)
+
+        if (editingExpenseId != null) {
+            etAmount.setText(intent.getDoubleExtra("amount", 0.0).toString())
+            etDate.setText(intent.getStringExtra("date"))
+            etNotes.setText(intent.getStringExtra("notes"))
+            selectedReceiptUri = intent.getStringExtra("receiptUri")
+            btnSaveExpense.text = "Update Expense"
+        }
+
         etAmount.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -229,21 +185,9 @@ class AddExpenseActivity : AppCompatActivity() {
             }
         })
 
-        spCategory.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: android.widget.AdapterView<*>?,
-                view: View?,
-                position: Int,
-                id: Long
-            ) {
-                updateWarning()
-            }
-
-            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
-        }
-
         etDate.setOnClickListener {
             val calendar = Calendar.getInstance()
+
             DatePickerDialog(
                 this,
                 { _, year, month, dayOfMonth ->
@@ -256,60 +200,63 @@ class AddExpenseActivity : AppCompatActivity() {
         }
 
         val pickImageLauncher = registerForActivityResult(
-            androidx.activity.result.contract.ActivityResultContracts.GetContent()
+            androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
         ) { uri ->
             uri?.let {
+                contentResolver.takePersistableUriPermission(
+                    it,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+
                 selectedReceiptUri = it.toString()
 
                 cardWarning.visibility = View.VISIBLE
                 cardWarning.setBackgroundResource(R.drawable.bg_card_white)
+                tvOverspendWarning.setTextColor(
+                    ContextCompat.getColor(this, R.color.text_primary)
+                )
                 tvOverspendWarning.text = "Receipt attached."
             }
         }
 
         cardReceipt.setOnClickListener {
-            pickImageLauncher.launch("image/*")
-        }
-
-        editingExpenseId = intent.getIntExtra("expenseId", -1).takeIf { it != -1 }
-
-        if (editingExpenseId != null) {
-            etAmount.setText(intent.getDoubleExtra("amount", 0.0).toString())
-            etDate.setText(intent.getStringExtra("date"))
-            etNotes.setText(intent.getStringExtra("notes"))
-
-            val selectedCategory = intent.getStringExtra("category")
-
-            btnSaveExpense.text = "Update Expense"
+            pickImageLauncher.launch(arrayOf("image/*"))
         }
 
         btnSaveExpense.setOnClickListener {
             val amount = etAmount.text.toString().toDoubleOrNull() ?: 0.0
-            val category = spCategory.selectedItem.toString()
+            val category = spCategory.selectedItem?.toString() ?: ""
             val date = etDate.text.toString()
             val notes = etNotes.text.toString()
 
+            if (amount <= 0.0 || category.isBlank() || category == "+ Add Category" || date.isBlank()) {
+                Toast.makeText(this, "Please fill in all required fields", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             lifecycleScope.launch {
                 if (editingExpenseId != null) {
-                    val updatedExpense = Expense(
-                        id = editingExpenseId!!,
-                        amount = amount,
-                        category = category,
-                        date = date,
-                        notes = notes,
-                        receiptUri = selectedReceiptUri
+                    expenseDao.updateExpense(
+                        Expense(
+                            id = editingExpenseId!!,
+                            amount = amount,
+                            category = category,
+                            date = date,
+                            notes = notes,
+                            receiptUri = selectedReceiptUri
+                        )
                     )
-                    expenseDao.updateExpense(updatedExpense)
                     Toast.makeText(this@AddExpenseActivity, "Expense updated", Toast.LENGTH_SHORT).show()
                 } else {
-                    val newExpense = Expense(
-                        amount = amount,
-                        category = category,
-                        date = date,
-                        notes = notes,
-                        receiptUri = selectedReceiptUri
+                    expenseDao.insertExpense(
+                        Expense(
+                            amount = amount,
+                            category = category,
+                            date = date,
+                            notes = notes,
+                            receiptUri = selectedReceiptUri
+                        )
                     )
-                    expenseDao.insertExpense(newExpense)
                     Toast.makeText(this@AddExpenseActivity, "Expense added", Toast.LENGTH_SHORT).show()
                 }
 

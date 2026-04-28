@@ -1,11 +1,13 @@
 package com.example.prog7313
 
 import android.content.Context
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import kotlin.jvm.java
 
 class ExpenseAdapter(
     context: Context,
@@ -32,6 +34,12 @@ class ExpenseAdapter(
         } else {
             tvReceipt.visibility = View.GONE
         }
+
+        /*view.setOnClickListener {
+            val intent = Intent(context, ReceiptViewerActivity::class.java)
+            intent.putExtra("receiptUri", expense.receiptUri)
+            context.startActivity(intent)
+        }*/
 
         return view
     }
