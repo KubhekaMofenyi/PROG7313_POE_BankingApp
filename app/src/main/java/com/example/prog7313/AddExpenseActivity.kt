@@ -27,29 +27,8 @@ class AddExpenseActivity : AppCompatActivity() {
     private var selectedReceiptUri: String? = null
     private var categoryNames = mutableListOf<String>()
 
-    private fun showAddCategoryDialog() {
-        val input = EditText(this)
-        input.hint = "Enter category name"
-
-        AlertDialog.Builder(this)
-            .setTitle("New Category")
-            .setView(input)
-            .setPositiveButton("Add") { _, _ ->
-                val newCategory = input.text.toString().trim()
-
-                if (newCategory.isNotEmpty()) {
-                    lifecycleScope.launch {
-                        categoryDao.insertCategory(Category(name = newCategory))
-                        loadCategories(newCategory)
-                        Toast.makeText(this@AddExpenseActivity, "Category added", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun loadCategories(selectCategory: String? = null) {
+    // ----- Category spinner + default to Uncategorised for new expenses -----
+    private fun loadCategories(selectCategory: String? = null, isEditing: Boolean = false) {
         lifecycleScope.launch {
             var categories = categoryDao.getAllCategories()
 
@@ -65,10 +44,13 @@ class AddExpenseActivity : AppCompatActivity() {
                     categoryDao.insertCategory(Category(name = name, color = color))
                 }
                 categoryDao.insertCategory(Category(name = "Uncategorised", color = "#9E9E9E"))
+                categories = categoryDao.getAllCategories()
             }
 
+            // Ensure Uncategorised exists (for deleted categories)
             if (categoryDao.getCategoryByName("Uncategorised") == null) {
                 categoryDao.insertCategory(Category(name = "Uncategorised", color = "#9E9E9E"))
+                categories = categoryDao.getAllCategories()
             }
 
             categoryNames = categories.map { it.name }.distinct().toMutableList()
@@ -79,15 +61,43 @@ class AddExpenseActivity : AppCompatActivity() {
                 android.R.layout.simple_spinner_item,
                 categoryNames
             )
-
             spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             spCategory.adapter = spinnerAdapter
 
+            // If editing, select the original category
             selectCategory?.let {
                 val index = categoryNames.indexOf(it)
                 if (index >= 0) spCategory.setSelection(index)
             }
+
+            // NEW DEFAULT: if NOT editing and no category passed, set to "Uncategorised"
+            if (!isEditing && selectCategory == null) {
+                val uncatIndex = categoryNames.indexOf("Uncategorised")
+                if (uncatIndex >= 0) spCategory.setSelection(uncatIndex)
+            }
         }
+    }
+
+    // ----- Dialog to add new category (from spinner) -----
+    private fun showAddCategoryDialog() {
+        val input = EditText(this)
+        input.hint = "Enter category name"
+
+        AlertDialog.Builder(this)
+            .setTitle("New Category")
+            .setView(input)
+            .setPositiveButton("Add") { _, _ ->
+                val newCategory = input.text.toString().trim()
+                if (newCategory.isNotEmpty()) {
+                    lifecycleScope.launch {
+                        categoryDao.insertCategory(Category(name = newCategory))
+                        loadCategories(newCategory)
+                        Toast.makeText(this@AddExpenseActivity, "Category added", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -145,7 +155,6 @@ class AddExpenseActivity : AppCompatActivity() {
                         tvOverspendWarning.text =
                             "Overspending! You exceed $category by R%.0f.".format(-remaining)
                     }
-
                     remaining <= limit * 0.2 -> {
                         cardWarning.visibility = View.VISIBLE
                         cardWarning.setBackgroundResource(R.drawable.bg_card_secondary)
@@ -153,7 +162,6 @@ class AddExpenseActivity : AppCompatActivity() {
                         tvOverspendWarning.text =
                             "Warning: Only R%.0f left in $category after this expense.".format(remaining)
                     }
-
                     else -> {
                         cardWarning.visibility = View.GONE
                     }
@@ -161,26 +169,23 @@ class AddExpenseActivity : AppCompatActivity() {
             }
         }
 
-
-
         spCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                 val selected = categoryNames.getOrNull(position) ?: return
-
                 if (selected == "+ Add Category") {
                     showAddCategoryDialog()
                 } else {
                     updateWarning()
                 }
             }
-
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
 
         editingExpenseId = intent.getIntExtra("expenseId", -1).takeIf { it != -1 }
 
         val selectedCategoryFromIntent = intent.getStringExtra("category")
-        loadCategories(selectedCategoryFromIntent)
+        val isEditing = editingExpenseId != null
+        loadCategories(selectedCategoryFromIntent, isEditing)
 
         if (editingExpenseId != null) {
             etAmount.setText(intent.getDoubleExtra("amount", 0.0).toString())
@@ -193,14 +198,11 @@ class AddExpenseActivity : AppCompatActivity() {
         etAmount.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) {
-                updateWarning()
-            }
+            override fun afterTextChanged(s: Editable?) { updateWarning() }
         })
 
         etDate.setOnClickListener {
             val calendar = Calendar.getInstance()
-
             DatePickerDialog(
                 this,
                 { _, year, month, dayOfMonth ->
@@ -216,18 +218,11 @@ class AddExpenseActivity : AppCompatActivity() {
             androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
         ) { uri ->
             uri?.let {
-                contentResolver.takePersistableUriPermission(
-                    it,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-
+                contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 selectedReceiptUri = it.toString()
-
                 cardWarning.visibility = View.VISIBLE
                 cardWarning.setBackgroundResource(R.drawable.bg_card_white)
-                tvOverspendWarning.setTextColor(
-                    ContextCompat.getColor(this, R.color.text_primary)
-                )
+                tvOverspendWarning.setTextColor(ContextCompat.getColor(this, R.color.text_primary))
                 tvOverspendWarning.text = "Receipt attached."
             }
         }
@@ -272,25 +267,20 @@ class AddExpenseActivity : AppCompatActivity() {
                     )
                     Toast.makeText(this@AddExpenseActivity, "Expense added", Toast.LENGTH_SHORT).show()
                 }
-
                 finish()
             }
         }
 
-        tvCancelExpense.setOnClickListener {
-            finish()
-        }
+        tvCancelExpense.setOnClickListener { finish() }
 
         btnHome.setOnClickListener {
             startActivity(Intent(this, DashboardActivity::class.java))
             finish()
         }
-
         btnFinance.setOnClickListener {
             startActivity(Intent(this, FinanceActivity::class.java))
             finish()
         }
-
         btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
             finish()
@@ -301,10 +291,11 @@ class AddExpenseActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Reload categories, preserve selection if possible
-        val currentSelection = if (spCategory.selectedItemPosition >= 0) {
+        // Refresh spinner after returning from ManageCategoriesActivity
+        val currentSelection = if (::spCategory.isInitialized && spCategory.selectedItemPosition >= 0) {
             spCategory.selectedItem.toString()
         } else null
-        loadCategories(currentSelection)
+        val isEditing = editingExpenseId != null
+        loadCategories(currentSelection, isEditing)
     }
 }

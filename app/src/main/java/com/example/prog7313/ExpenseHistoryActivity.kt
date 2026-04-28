@@ -16,37 +16,33 @@ class ExpenseHistoryActivity : AppCompatActivity() {
 
     private lateinit var expenseDao: ExpenseDao
     private lateinit var listView: ListView
-    private var expenses: List<Expense> = emptyList()
+    private var expenses: List<Expense> = emptyList()   // full list (unfiltered)
+    private var currentAdapter: ExpenseAdapter? = null
 
     lateinit var etSearch: EditText
 
     private fun loadExpenses() {
         lifecycleScope.launch {
-            expenses = expenseDao.getAllExpenses()
+            expenses = expenseDao.getAllExpenses().sortedByDescending { it.date }
 
             val adapter = ExpenseAdapter(this@ExpenseHistoryActivity, expenses)
             listView.adapter = adapter
-
-            expenses = expenseDao.getAllExpenses()
-                .sortedByDescending { it.date } // newest first
+            currentAdapter = adapter
 
             etSearch.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-
                 override fun afterTextChanged(s: Editable?) {
                     val query = s.toString().lowercase()
-
                     val filtered = expenses.filter {
                         it.category.lowercase().contains(query) ||
                                 it.date.lowercase().contains(query) ||
                                 it.notes.lowercase().contains(query)
                     }
-
-                    listView.adapter = ExpenseAdapter(this@ExpenseHistoryActivity, filtered)
+                    val newAdapter = ExpenseAdapter(this@ExpenseHistoryActivity, filtered)
+                    listView.adapter = newAdapter
+                    currentAdapter = newAdapter
                 }
-
             })
         }
     }
@@ -56,7 +52,6 @@ class ExpenseHistoryActivity : AppCompatActivity() {
         setContentView(R.layout.activity_expense_history)
 
         etSearch = findViewById(R.id.etSearch)
-
         listView = findViewById(R.id.listExpenses)
 
         val db = AppDatabase.getDatabase(this)
@@ -64,8 +59,15 @@ class ExpenseHistoryActivity : AppCompatActivity() {
 
         loadExpenses()
 
+        // FIX: Use adapter to get correct expense (respects filter)
         listView.setOnItemClickListener { _, _, position, _ ->
-            val selectedExpense = expenses[position]
+            val adapter = listView.adapter as? ExpenseAdapter
+            val selectedExpense = adapter?.getItem(position)
+
+            if (selectedExpense == null) {
+                Toast.makeText(this, "Could not retrieve expense", Toast.LENGTH_SHORT).show()
+                return@setOnItemClickListener
+            }
 
             AlertDialog.Builder(this)
                 .setTitle("Expense Options")
@@ -81,6 +83,7 @@ class ExpenseHistoryActivity : AppCompatActivity() {
                     intent.putExtra("category", selectedExpense.category)
                     intent.putExtra("date", selectedExpense.date)
                     intent.putExtra("notes", selectedExpense.notes)
+                    intent.putExtra("receiptUri", selectedExpense.receiptUri)   // added
                     startActivity(intent)
                 }
                 .setNeutralButton("Delete") { _, _ ->
@@ -91,16 +94,8 @@ class ExpenseHistoryActivity : AppCompatActivity() {
         }
 
         listView.setOnItemLongClickListener { _, _, position, _ ->
-            val selectedExpense = expenses[position]
-
-            val intent = Intent(this, AddExpenseActivity::class.java)
-            intent.putExtra("expenseId", selectedExpense.id)
-            intent.putExtra("amount", selectedExpense.amount)
-            intent.putExtra("category", selectedExpense.category)
-            intent.putExtra("date", selectedExpense.date)
-            intent.putExtra("notes", selectedExpense.notes)
-
-            startActivity(intent)
+            val adapter = listView.adapter as? ExpenseAdapter
+            val selectedExpense = adapter?.getItem(position) ?: return@setOnItemLongClickListener false
 
             AlertDialog.Builder(this)
                 .setTitle("Delete Expense")
@@ -110,7 +105,6 @@ class ExpenseHistoryActivity : AppCompatActivity() {
                 }
                 .setNegativeButton("No", null)
                 .show()
-
             true
         }
     }
