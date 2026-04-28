@@ -122,6 +122,17 @@
                 android:textSize="13sp" />
 
             <TextView
+                android:id="@+id/tvManageCategories"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_input"
+                android:padding="14dp"
+                android:text="Manage Categories"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp" />
+
+            <TextView
                 android:id="@+id/tvCurrency"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

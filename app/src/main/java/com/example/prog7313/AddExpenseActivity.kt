@@ -54,10 +54,21 @@ class AddExpenseActivity : AppCompatActivity() {
             var categories = categoryDao.getAllCategories()
 
             if (categories.isEmpty()) {
-                listOf("Groceries", "Transport", "Bills", "Entertainment", "Other").forEach {
-                    categoryDao.insertCategory(Category(name = it))
+                val defaultColors = mapOf(
+                    "Groceries" to "#81C784",
+                    "Transport" to "#64B5F6",
+                    "Bills" to "#E57373",
+                    "Entertainment" to "#BA68C8",
+                    "Other" to "#FFB74D"
+                )
+                defaultColors.forEach { (name, color) ->
+                    categoryDao.insertCategory(Category(name = name, color = color))
                 }
-                categories = categoryDao.getAllCategories()
+                categoryDao.insertCategory(Category(name = "Uncategorised", color = "#9E9E9E"))
+            }
+
+            if (categoryDao.getCategoryByName("Uncategorised") == null) {
+                categoryDao.insertCategory(Category(name = "Uncategorised", color = "#9E9E9E"))
             }
 
             categoryNames = categories.map { it.name }.distinct().toMutableList()
@@ -149,6 +160,8 @@ class AddExpenseActivity : AppCompatActivity() {
                 }
             }
         }
+
+
 
         spCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
@@ -284,5 +297,14 @@ class AddExpenseActivity : AppCompatActivity() {
         }
 
         cardWarning.visibility = View.GONE
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Reload categories, preserve selection if possible
+        val currentSelection = if (spCategory.selectedItemPosition >= 0) {
+            spCategory.selectedItem.toString()
+        } else null
+        loadCategories(currentSelection)
     }
 }

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 
@@ -17,10 +18,17 @@ class SettingsActivity : AppCompatActivity() {
         val btnHome = findViewById<ImageButton>(R.id.btnHome)
         val btnSettings = findViewById<ImageButton>(R.id.btnSettings)
         val btnLogout = findViewById<Button>(R.id.btnLogout)
+        val tvManageCategories = findViewById<TextView>(R.id.tvManageCategories)
+        tvManageCategories.setOnClickListener {
+            startActivity(Intent(this, ManageCategoriesActivity::class.java))
+        }
+
 
         btnSettings.setBackgroundResource(R.drawable.bg_nav_selected)
         btnHome.setBackgroundColor(ContextCompat.getColor(this, android.R.color.transparent))
         btnFinance.setBackgroundColor(ContextCompat.getColor(this, android.R.color.transparent))
+
+
 
         btnHome.setOnClickListener {
             startActivity(Intent(this, DashboardActivity::class.java))

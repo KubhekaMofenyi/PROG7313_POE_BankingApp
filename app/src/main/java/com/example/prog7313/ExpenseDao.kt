@@ -31,4 +31,9 @@ interface ExpenseDao {
 
     @Update
     suspend fun updateExpense(expense: Expense)
+
+    //adding feature where if category is deleted assigned to uncategorized
+
+    @Query("UPDATE expenses SET category = :newCategory WHERE category = :oldCategory")
+    suspend fun reassignCategory(oldCategory: String, newCategory: String)
 }
