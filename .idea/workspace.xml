@@ -180,6 +180,11 @@
           <theme>@style/Theme.PROG7313</theme>
         </config>
       </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/item_expense.xml">
+        <config>
+          <theme>@style/Theme.PROG7313</theme>
+        </config>
+      </layout>
     </layouts>
   </component>
   <component name="AutoImportSettings">
@@ -187,9 +192,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0f66f2f3-a89c-4a70-a352-d899e1b6962a" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/prog7313/ExpenseAdapter.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/layout/item_expense.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/prog7313/AddExpenseActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/prog7313/AddExpenseActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/prog7313/AppDatabase.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/prog7313/AppDatabase.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/prog7313/Expense.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/prog7313/Expense.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/prog7313/ExpenseHistoryActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/prog7313/ExpenseHistoryActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/activity_expense_history.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/activity_expense_history.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -226,6 +236,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Class" />
+        <option value="layoutResourceFile" />
         <option value="Kotlin Class" />
       </list>
     </option>

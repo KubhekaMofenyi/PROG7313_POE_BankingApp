@@ -11,5 +11,6 @@ data class Expense(
     val date: String,
     val category: String,
     val notes: String,
-    val hasReceipt: Boolean = false
+    val hasReceipt: Boolean = false,
+    val receiptUri: String? = null
 )

@@ -24,6 +24,7 @@ import java.util.Calendar
 class AddExpenseActivity : AppCompatActivity() {
 
     private var editingExpenseId: Int? = null
+    private var selectedReceiptUri: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -146,14 +147,20 @@ class AddExpenseActivity : AppCompatActivity() {
             ).show()
         }
 
+        val pickImageLauncher = registerForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.GetContent()
+        ) { uri ->
+            uri?.let {
+                selectedReceiptUri = it.toString()
+
+                cardWarning.visibility = View.VISIBLE
+                cardWarning.setBackgroundResource(R.drawable.bg_card_white)
+                tvOverspendWarning.text = "Receipt attached."
+            }
+        }
+
         cardReceipt.setOnClickListener {
-            receiptSelected = true
-            cardWarning.visibility = View.VISIBLE
-            cardWarning.setBackgroundResource(R.drawable.bg_card_white)
-            tvOverspendWarning.setTextColor(
-                ContextCompat.getColor(this, R.color.text_primary)
-            )
-            tvOverspendWarning.text = "Receipt selected."
+            pickImageLauncher.launch("image/*")
         }
 
         editingExpenseId = intent.getIntExtra("expenseId", -1).takeIf { it != -1 }
@@ -186,7 +193,8 @@ class AddExpenseActivity : AppCompatActivity() {
                         amount = amount,
                         category = category,
                         date = date,
-                        notes = notes
+                        notes = notes,
+                        receiptUri = selectedReceiptUri
                     )
                     expenseDao.updateExpense(updatedExpense)
                     Toast.makeText(this@AddExpenseActivity, "Expense updated", Toast.LENGTH_SHORT).show()
@@ -195,7 +203,8 @@ class AddExpenseActivity : AppCompatActivity() {
                         amount = amount,
                         category = category,
                         date = date,
-                        notes = notes
+                        notes = notes,
+                        receiptUri = selectedReceiptUri
                     )
                     expenseDao.insertExpense(newExpense)
                     Toast.makeText(this@AddExpenseActivity, "Expense added", Toast.LENGTH_SHORT).show()

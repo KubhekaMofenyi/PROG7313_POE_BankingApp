@@ -3,8 +3,9 @@ package com.example.prog7313
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
-import android.widget.ArrayAdapter
-import android.widget.ImageButton
+import android.text.Editable
+import android.text.TextWatcher
+import android.widget.EditText
 import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -17,9 +18,44 @@ class ExpenseHistoryActivity : AppCompatActivity() {
     private lateinit var listView: ListView
     private var expenses: List<Expense> = emptyList()
 
+    lateinit var etSearch: EditText
+
+    private fun loadExpenses() {
+        lifecycleScope.launch {
+            expenses = expenseDao.getAllExpenses()
+
+            val adapter = ExpenseAdapter(this@ExpenseHistoryActivity, expenses)
+            listView.adapter = adapter
+
+            expenses = expenseDao.getAllExpenses()
+                .sortedByDescending { it.date } // newest first
+
+            etSearch.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+                override fun afterTextChanged(s: Editable?) {
+                    val query = s.toString().lowercase()
+
+                    val filtered = expenses.filter {
+                        it.category.lowercase().contains(query) ||
+                                it.date.lowercase().contains(query) ||
+                                it.notes.lowercase().contains(query)
+                    }
+
+                    listView.adapter = ExpenseAdapter(this@ExpenseHistoryActivity, filtered)
+                }
+
+            })
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_expense_history)
+
+        etSearch = findViewById(R.id.etSearch)
 
         listView = findViewById(R.id.listExpenses)
 
@@ -57,6 +93,15 @@ class ExpenseHistoryActivity : AppCompatActivity() {
         listView.setOnItemLongClickListener { _, _, position, _ ->
             val selectedExpense = expenses[position]
 
+            val intent = Intent(this, AddExpenseActivity::class.java)
+            intent.putExtra("expenseId", selectedExpense.id)
+            intent.putExtra("amount", selectedExpense.amount)
+            intent.putExtra("category", selectedExpense.category)
+            intent.putExtra("date", selectedExpense.date)
+            intent.putExtra("notes", selectedExpense.notes)
+
+            startActivity(intent)
+
             AlertDialog.Builder(this)
                 .setTitle("Delete Expense")
                 .setMessage("Are you sure you want to delete this expense?")
@@ -67,24 +112,6 @@ class ExpenseHistoryActivity : AppCompatActivity() {
                 .show()
 
             true
-        }
-    }
-
-    private fun loadExpenses() {
-        lifecycleScope.launch {
-            expenses = expenseDao.getAllExpenses()
-
-            val displayList = expenses.map {
-                "R%,.0f | ${it.category} | ${it.date} | ${it.notes}".format(it.amount)
-            }
-
-            val adapter = ArrayAdapter(
-                this@ExpenseHistoryActivity,
-                android.R.layout.simple_list_item_1,
-                displayList
-            )
-
-            listView.adapter = adapter
         }
     }
 
