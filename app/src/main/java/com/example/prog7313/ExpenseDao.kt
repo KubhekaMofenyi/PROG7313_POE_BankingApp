@@ -36,4 +36,19 @@ interface ExpenseDao {
 
     @Query("UPDATE expenses SET category = :newCategory WHERE category = :oldCategory")
     suspend fun reassignCategory(oldCategory: String, newCategory: String)
+
+    // adding filter query
+    @Query("SELECT * FROM expenses WHERE " +
+            "(:keyword IS NULL OR category LIKE '%' || :keyword || '%' OR notes LIKE '%' || :keyword || '%' OR date LIKE '%' || :keyword || '%') AND " +
+            "(:category IS NULL OR category = :category) AND " +
+            "(:startDate IS NULL OR date >= :startDate) AND " +
+            "(:endDate IS NULL OR date <= :endDate) " +
+            "ORDER BY date DESC")
+    suspend fun getFilteredExpenses(
+        keyword: String?,
+        category: String?,
+        startDate: String?,
+        endDate: String?
+    ): List<Expense>
+
 }

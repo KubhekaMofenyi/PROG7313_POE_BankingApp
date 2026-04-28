@@ -6,6 +6,7 @@
     android:padding="16dp"
     android:background="@color/app_background">
 
+    <!-- Search bar (keyword) -->
     <EditText
         android:id="@+id/etSearch"
         android:layout_width="match_parent"
@@ -14,8 +15,73 @@
         android:padding="10dp"
         android:background="@drawable/bg_input"
         android:textColor="@color/text_primary"
-        android:layout_marginBottom="10dp" />
+        android:layout_marginBottom="12dp" />
 
+    <!-- Category filter spinner -->
+    <Spinner
+        android:id="@+id/spCategoryFilter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_input"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Date range row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="12dp">
+
+        <EditText
+            android:id="@+id/etStartDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Start date (dd/MM/yyyy)"
+            android:focusable="false"
+            android:background="@drawable/bg_input"
+            android:padding="10dp"
+            android:layout_marginEnd="8dp" />
+
+        <EditText
+            android:id="@+id/etEndDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="End date (dd/MM/yyyy)"
+            android:focusable="false"
+            android:background="@drawable/bg_input"
+            android:padding="10dp" />
+    </LinearLayout>
+
+    <!-- Filter buttons row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <Button
+            android:id="@+id/btnApplyFilter"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Apply Filters"
+            android:backgroundTint="@color/primary_red"
+            android:textColor="@android:color/white"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnClearFilters"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Clear Filters"
+            android:backgroundTint="@color/accent_orange"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
+
+    <!-- Expense list -->
     <ListView
         android:id="@+id/listExpenses"
         android:layout_width="match_parent"
