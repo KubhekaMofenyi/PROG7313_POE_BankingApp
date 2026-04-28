@@ -31,6 +31,11 @@ class ExpenseAdapter(
 
         if (expense.receiptUri != null) {
             tvReceipt.visibility = View.VISIBLE
+            tvReceipt.setOnClickListener {
+                val intent = Intent(context, ReceiptViewerActivity::class.java)
+                intent.putExtra("receiptUri", expense.receiptUri)
+                context.startActivity(intent)
+            }
         } else {
             tvReceipt.visibility = View.GONE
         }
