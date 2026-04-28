@@ -9,7 +9,7 @@ data class Budget(
     val monthlyGoal: Double,
     val groceriesLimit: Double,
     val transportLimit: Double,
-    val billsLimit: Double,
     val entertainmentLimit: Double,
-    val otherLimit: Double
+    val otherLimit: Double,
+    val billsLimit: Double
 )

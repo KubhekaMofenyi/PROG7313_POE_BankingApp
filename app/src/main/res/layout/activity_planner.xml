@@ -97,114 +97,14 @@
                 android:textStyle="bold" />
 
             <LinearLayout
-                android:id="@+id/cardAllocations"
+                android:id="@+id/categoryContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/bg_card_primary"
-                android:elevation="5dp"
+                android:background="@drawable/bg_card_white"
+                android:elevation="4dp"
                 android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Groceries"
-                    android:textColor="@android:color/white"
-                    android:textStyle="bold" />
-
-                <EditText
-                    android:id="@+id/etGroceries"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/bg_input"
-                    android:hint="Enter amount"
-                    android:inputType="numberDecimal"
-                    android:padding="12dp"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_secondary" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:text="Transport"
-                    android:textColor="@android:color/white"
-                    android:textStyle="bold" />
-
-                <EditText
-                    android:id="@+id/etTransport"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/bg_input"
-                    android:hint="Enter amount"
-                    android:inputType="numberDecimal"
-                    android:padding="12dp"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_secondary" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:text="Bills"
-                    android:textColor="@android:color/white"
-                    android:textStyle="bold" />
-
-                <EditText
-                    android:id="@+id/etBills"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/bg_input"
-                    android:hint="Enter amount"
-                    android:inputType="numberDecimal"
-                    android:padding="12dp"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_secondary" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:text="Entertainment"
-                    android:textColor="@android:color/white"
-                    android:textStyle="bold" />
-
-                <EditText
-                    android:id="@+id/etEntertainment"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/bg_input"
-                    android:hint="Enter amount"
-                    android:inputType="numberDecimal"
-                    android:padding="12dp"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_secondary" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:text="Other"
-                    android:textColor="@android:color/white"
-                    android:textStyle="bold" />
-
-                <EditText
-                    android:id="@+id/etOther"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/bg_input"
-                    android:hint="Enter amount"
-                    android:inputType="numberDecimal"
-                    android:padding="12dp"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_secondary" />
-            </LinearLayout>
+                android:padding="16dp" />
 
             <LinearLayout
                 android:id="@+id/cardPlannerSummary"
@@ -243,7 +143,8 @@
                 android:background="@drawable/bg_card_white"
                 android:elevation="4dp"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="16dp"
+                android:visibility="gone">
 
                 <TextView
                     android:id="@+id/tvPlannerWarningTitle"
@@ -282,6 +183,7 @@
                 android:backgroundTint="@color/accent_orange"
                 android:text="Skip For Now"
                 android:textColor="@android:color/white" />
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

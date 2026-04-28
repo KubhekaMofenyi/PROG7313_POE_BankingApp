@@ -22,16 +22,10 @@ class PlannerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_planner)
 
-        val etMonthlyGoal = findViewById<EditText>(R.id.etMonthlyGoal)
-        val etGroceries = findViewById<EditText>(R.id.etGroceries)
-        val etTransport = findViewById<EditText>(R.id.etTransport)
-        val etBills = findViewById<EditText>(R.id.etBills)
-        val etEntertainment = findViewById<EditText>(R.id.etEntertainment)
-        val etOther = findViewById<EditText>(R.id.etOther)
-
         val tvAllocated = findViewById<TextView>(R.id.tvAllocated)
         val tvRemainingPlanner = findViewById<TextView>(R.id.tvRemainingPlanner)
         val cardPlannerWarning = findViewById<LinearLayout>(R.id.cardPlannerWarning)
+        val categoryInputs = mutableMapOf<String, EditText>()
 
         val btnCopyLastMonth = findViewById<Button>(R.id.btnCopyLastMonth)
         val btnSavePlan = findViewById<Button>(R.id.btnSavePlan)
@@ -41,24 +35,22 @@ class PlannerActivity : AppCompatActivity() {
         val btnHome = findViewById<ImageButton>(R.id.btnHome)
         val btnSettings = findViewById<ImageButton>(R.id.btnSettings)
 
+        val categoryContainer = findViewById<LinearLayout>(R.id.categoryContainer)
+
         val db = AppDatabase.getDatabase(this)
         val budgetDao = db.budgetDao()
+        val categoryDao = db.categoryDao()
+        val categoryLimitDao = db.categoryLimitDao()
 
         val etBudget = findViewById<EditText>(R.id.etMonthlyGoal)
-        val btnSave = findViewById<Button>(R.id.btnSavePlan)
 
         fun parseAmount(editText: EditText): Double {
             return editText.text.toString().toDoubleOrNull() ?: 0.0
         }
 
         fun updateSummary() {
-            val monthlyGoal = parseAmount(etMonthlyGoal)
-            val allocated =
-                parseAmount(etGroceries) +
-                        parseAmount(etTransport) +
-                        parseAmount(etBills) +
-                        parseAmount(etEntertainment) +
-                        parseAmount(etOther)
+            val monthlyGoal = parseAmount(etBudget)
+            val allocated = categoryInputs.values.sumOf { parseAmount(it) }
 
             val remaining = monthlyGoal - allocated
 
@@ -80,18 +72,39 @@ class PlannerActivity : AppCompatActivity() {
             }
         }
 
-        listOf(etMonthlyGoal, etGroceries, etTransport, etBills, etEntertainment, etOther)
-            .forEach { it.addTextChangedListener(watcher) }
+        lifecycleScope.launch {
+            var categories = categoryDao.getAllCategories()
 
-        btnCopyLastMonth.setOnClickListener {
-            etMonthlyGoal.setText("5000")
-            etGroceries.setText("1200")
-            etTransport.setText("800")
-            etBills.setText("1500")
-            etEntertainment.setText("700")
-            etOther.setText("300")
+            if (categories.isEmpty()) {
+                listOf("Groceries", "Transport", "Bills", "Entertainment", "Other").forEach {
+                    categoryDao.insertCategory(Category(name = it))
+                }
+
+                categories = categoryDao.getAllCategories()
+            }
+
+            categoryContainer.removeAllViews()
+
+            categories.forEach { category ->
+
+                val label = TextView(this@PlannerActivity).apply {
+                    text = category.name
+                    textSize = 16f
+                }
+
+                val input = EditText(this@PlannerActivity).apply {
+                    hint = "Enter amount"
+                    inputType = android.text.InputType.TYPE_CLASS_NUMBER
+                }
+
+                categoryContainer.addView(label)
+                categoryContainer.addView(input)
+
+                categoryInputs[category.name] = input
+
+                input.addTextChangedListener(watcher)
+            }
         }
-
 
         btnSkipPlan.setOnClickListener {
             startActivity(Intent(this, DashboardActivity::class.java))
@@ -99,26 +112,38 @@ class PlannerActivity : AppCompatActivity() {
         }
 
         btnSavePlan.setOnClickListener {
-            val monthlyGoal = parseAmount(etMonthlyGoal)
-            val groceries = parseAmount(etGroceries)
-            val transport = parseAmount(etTransport)
-            val bills = parseAmount(etBills)
-            val entertainment = parseAmount(etEntertainment)
-            val other = parseAmount(etOther)
+
+            val monthlyGoal = parseAmount(etBudget)
 
             lifecycleScope.launch {
+
+                // Save main budget
                 budgetDao.insertBudget(
                     Budget(
                         monthlyGoal = monthlyGoal,
-                        groceriesLimit = groceries,
-                        transportLimit = transport,
-                        billsLimit = bills,
-                        entertainmentLimit = entertainment,
-                        otherLimit = other
+                        groceriesLimit = 0.0,
+                        transportLimit = 0.0,
+                        billsLimit = 0.0,
+                        entertainmentLimit = 0.0,
+                        otherLimit = 0.0
                     )
                 )
 
-                Toast.makeText(this@PlannerActivity, "Budget plan saved", Toast.LENGTH_SHORT).show()
+                // Save category limits
+                categoryInputs.forEach { (category, input) ->
+                    val amount = parseAmount(input)
+
+                    categoryLimitDao.saveLimit(
+                        CategoryLimit(
+                            categoryName = category,
+                            limitAmount = amount
+                        )
+                    )
+                }
+
+                Toast.makeText(this@PlannerActivity, "Plan saved", Toast.LENGTH_SHORT).show()
+
+                startActivity(Intent(this@PlannerActivity, DashboardActivity::class.java))
                 finish()
             }
         }

@@ -1,7 +1,6 @@
 package com.example.prog7313
 
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.widget.ImageButton
 import android.widget.ProgressBar
@@ -12,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import kotlin.math.max
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

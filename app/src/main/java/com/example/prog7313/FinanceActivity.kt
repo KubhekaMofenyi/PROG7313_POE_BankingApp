@@ -2,7 +2,6 @@ package com.example.prog7313
 
 import android.content.Intent
 import android.graphics.Color
-import android.graphics.Typeface
 import android.os.Bundle
 import android.widget.ImageButton
 import android.widget.LinearLayout
@@ -107,23 +106,19 @@ class FinanceActivity : AppCompatActivity() {
             val container = findViewById<LinearLayout>(R.id.budgetProgressContainer)
             container.removeAllViews()
 
-            val categories = listOf(
-                "Groceries" to budget?.groceriesLimit,
-                "Transport" to budget?.transportLimit,
-                "Bills" to budget?.billsLimit,
-                "Entertainment" to budget?.entertainmentLimit,
-                "Other" to budget?.otherLimit
-            )
+            val categoryLimits = db.categoryLimitDao().getAllLimits()
 
-            for ((category, limit) in categories) {
+            for (categoryLimit in categoryLimits) {
+                val category = categoryLimit.categoryName
+                val limit = categoryLimit.limitAmount
                 val spent = expenseDao.getSpentByCategory(category) ?: 0.0
 
                 val textView = TextView(this@FinanceActivity)
-                textView.text = "$category: R%.0f / R%.0f".format(spent, limit ?: 0.0)
+                textView.text = "$category: R%.0f / R%.0f".format(spent, limit)
                 textView.textSize = 14f
 
                 when {
-                    limit == null || limit == 0.0 -> textView.setTextColor(Color.GRAY)
+                    limit == 0.0 -> textView.setTextColor(Color.GRAY)
                     spent >= limit -> textView.setTextColor(Color.RED)
                     spent > limit * 0.8 -> textView.setTextColor(Color.parseColor("#FF9800"))
                     else -> textView.setTextColor(Color.parseColor("#2E7D32"))
