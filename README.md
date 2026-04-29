@@ -172,12 +172,13 @@ GitHub Actions workflows included:
 
 ## 📄 Documentation
 
-Located in:
+Located in:  
 docs/
 
 Includes:
 
-* Part 1 PDF
+- [📘 Part 1 PDF](docs/PROG7313_POE_Part1.pdf)
+- [📗 Part 2 PDF](docs/PROG7313_POE_Part2.pdf)
 
 ---
 
