@@ -166,7 +166,7 @@ GitHub Actions workflows included:
 
 ## 🎥 Demonstration Video
 
-👉 
+[![Watch the demo](https://img.youtube.com/vi/CGKiGdtb0Fw/0.jpg)](https://www.youtube.com/watch?v=CGKiGdtb0Fw)
 
 ---
 
