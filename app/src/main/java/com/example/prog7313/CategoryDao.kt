@@ -6,7 +6,6 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 
-// adding update, delete, duplicate checker functionality
 @Dao
 interface CategoryDao {
 
@@ -19,16 +18,31 @@ interface CategoryDao {
     @Delete
     suspend fun deleteCategory(category: Category)
 
-    @Query("SELECT * FROM categories ORDER BY name ASC")
+    @Query("""
+        SELECT * FROM categories
+        WHERE id IN (
+            SELECT MIN(id)
+            FROM categories
+            GROUP BY LOWER(name)
+        )
+        ORDER BY name ASC
+    """)
     suspend fun getAllCategories(): List<Category>
 
-    @Query("SELECT * FROM categories WHERE name = :name LIMIT 1")
+    @Query("SELECT * FROM categories WHERE LOWER(name) = LOWER(:name) LIMIT 1")
     suspend fun getCategoryByName(name: String): Category?
 
-    @Query("SELECT DISTINCT name FROM categories ORDER BY name ASC")
+    @Query("""
+        SELECT name FROM categories
+        WHERE id IN (
+            SELECT MIN(id)
+            FROM categories
+            GROUP BY LOWER(name)
+        )
+        ORDER BY name ASC
+    """)
     suspend fun getCategoryNames(): List<String>
 
-    // Case‑insensitive duplicate check
     @Query("SELECT COUNT(*) FROM categories WHERE LOWER(name) = LOWER(:name)")
     suspend fun countByNameIgnoreCase(name: String): Int
 }
