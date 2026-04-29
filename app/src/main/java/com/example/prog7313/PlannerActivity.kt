@@ -21,7 +21,6 @@ class PlannerActivity : AppCompatActivity() {
         val tvRemainingPlanner = findViewById<TextView>(R.id.tvRemainingPlanner)
         val cardPlannerWarning = findViewById<LinearLayout>(R.id.cardPlannerWarning)
         val categoryInputs = mutableMapOf<String, EditText>()
-        val categoryLabels = mutableMapOf<String, TextView>()
 
         val btnCopyLastMonth = findViewById<Button>(R.id.btnCopyLastMonth)
         val btnSavePlan = findViewById<Button>(R.id.btnSavePlan)
@@ -39,6 +38,7 @@ class PlannerActivity : AppCompatActivity() {
         val categoryLimitDao = db.categoryLimitDao()
 
         val etBudget = findViewById<EditText>(R.id.etMonthlyGoal)
+        val etMinMonthlyGoal = findViewById<EditText>(R.id.etMinMonthlyGoal)
 
         fun parseAmount(editText: EditText): Double {
             return editText.text.toString().toDoubleOrNull() ?: 0.0
@@ -67,7 +67,6 @@ class PlannerActivity : AppCompatActivity() {
                 categories = categoryDao.getAllCategories()
             }
 
-            // Load existing limits
             val existingLimits = categoryLimitDao.getAllLimits().associate { it.categoryName to it.limitAmount }
 
             categoryContainer.removeAllViews()
@@ -80,25 +79,22 @@ class PlannerActivity : AppCompatActivity() {
                 val input = EditText(this@PlannerActivity).apply {
                     hint = "Enter amount"
                     inputType = android.text.InputType.TYPE_CLASS_NUMBER
-                    // Pre-fill with existing limit if any
                     val existingLimit = existingLimits[category.name]
                     if (existingLimit != null && existingLimit > 0) {
                         setText(existingLimit.toInt().toString())
-                        // Optional: change hint to show it's already set
                         hint = "Currently: R${existingLimit.toInt()}"
                     }
                 }
                 categoryContainer.addView(label)
                 categoryContainer.addView(input)
-                categoryLabels[category.name] = label
                 categoryInputs[category.name] = input
                 input.addTextChangedListener(watcher)
             }
 
-            // Also load the monthly goal from Budget table
             val budget = budgetDao.getBudget()
-            if (budget != null && budget.monthlyGoal > 0) {
-                etBudget.setText(budget.monthlyGoal.toInt().toString())
+            if (budget != null) {
+                if (budget.monthlyGoal > 0) etBudget.setText(budget.monthlyGoal.toInt().toString())
+                if (budget.minMonthlyGoal > 0) etMinMonthlyGoal.setText(budget.minMonthlyGoal.toInt().toString())
             }
             updateSummary()
         }
@@ -110,10 +106,13 @@ class PlannerActivity : AppCompatActivity() {
 
         btnSavePlan.setOnClickListener {
             val monthlyGoal = parseAmount(etBudget)
+            val minMonthlyGoal = parseAmount(etMinMonthlyGoal)
+
             lifecycleScope.launch {
                 budgetDao.insertBudget(
                     Budget(
                         monthlyGoal = monthlyGoal,
+                        minMonthlyGoal = minMonthlyGoal,
                         groceriesLimit = 0.0,
                         transportLimit = 0.0,
                         billsLimit = 0.0,
@@ -147,6 +146,7 @@ class PlannerActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
             finish()
         }
+
         cardPlannerWarning.visibility = View.GONE
         updateSummary()
     }

@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [User::class, Expense::class, Budget::class, UserStats::class, Category::class, CategoryLimit::class],
-    version = 10
+    version = 11
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
@@ -29,6 +29,13 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_9_10 = object : Migration(9, 10) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("ALTER TABLE categories ADD COLUMN color TEXT NOT NULL DEFAULT '#C77921'")
+            }
+        }
+        // Add new migration
+        //this migration preserves their data and adds the new column with default 0.0.
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE Budget ADD COLUMN minMonthlyGoal REAL NOT NULL DEFAULT 0.0")
             }
         }
 
@@ -64,7 +71,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "budget_db"
                 )
-                    .addMigrations(MIGRATION_9_10)
+                    .addMigrations(MIGRATION_9_10, MIGRATION_10_11)
                     .addCallback(prepopulateCallback)   // <-- ensures default budget exists
                     .fallbackToDestructiveMigration()
                     .build()

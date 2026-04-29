@@ -32,6 +32,7 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var tvRecentItem2: TextView
     private lateinit var tvRecentItem3: TextView
     private lateinit var tvRecentTip: TextView
+    private lateinit var tvMinGoal: TextView   // new
 
     private fun loadData() {
         val db = AppDatabase.getDatabase(this)
@@ -55,7 +56,16 @@ class DashboardActivity : AppCompatActivity() {
             progressBudget.max = totalBalance.toInt()
             progressBudget.progress = totalSpent.toInt()
 
-            // Budget status and overspending message
+            // Display minimum goal if set
+            val minGoal = budget?.minMonthlyGoal ?: 0.0
+            if (minGoal > 0) {
+                tvMinGoal.text = "Minimum spend target: R%,.0f".format(minGoal)
+                tvMinGoal.visibility = View.VISIBLE
+            } else {
+                tvMinGoal.visibility = View.GONE
+            }
+
+            // Budget status and overspending messages (same as before)
             when {
                 totalSpent > totalBalance -> {
                     tvBudgetStatus.text = "Warning. You have exceeded your budget."
@@ -71,7 +81,7 @@ class DashboardActivity : AppCompatActivity() {
                 }
             }
 
-            // Category overspending alerts
+            // Category warnings (existing code)
             val categoryWarnings = mutableListOf<String>()
             val categoryLimits = categoryLimitDao.getAllLimits()
             for (limit in categoryLimits) {
@@ -82,7 +92,6 @@ class DashboardActivity : AppCompatActivity() {
                     categoryWarnings.add("${limit.categoryName} is close to its limit. R%,.0f remaining.".format(limit.limitAmount - spent))
                 }
             }
-
             if (categoryWarnings.isNotEmpty()) {
                 cardOverspending.visibility = View.VISIBLE
                 tvOverspendingMessage.text = categoryWarnings.joinToString("\n")
@@ -91,7 +100,7 @@ class DashboardActivity : AppCompatActivity() {
                 tvOverspendingMessage.text = "No category overspending detected."
             }
 
-            // Top Categories (dynamic)
+            // Top categories, insights, recent activity, gamification (same as before)
             val categoryTotals = expenseDao.getCategoryTotals().sortedByDescending { it.total }.take(3)
             chipRow.removeAllViews()
             if (categoryTotals.isEmpty()) {
@@ -118,7 +127,6 @@ class DashboardActivity : AppCompatActivity() {
                 }
             }
 
-            // Insights
             val highestCategory = categoryTotals.maxByOrNull { it.total }
             val insight = when {
                 categoryTotals.isEmpty() -> "No spending insights yet. Add expenses to get started."
@@ -129,7 +137,6 @@ class DashboardActivity : AppCompatActivity() {
             }
             tvInsightMessage.text = insight
 
-            // Recent Activity (last 3 expenses)
             val recentExpenses = expenseDao.getAllExpenses().take(3)
             val recentTextViews = listOf(tvRecentItem1, tvRecentItem2, tvRecentItem3)
             for (i in recentTextViews.indices) {
@@ -142,7 +149,6 @@ class DashboardActivity : AppCompatActivity() {
                 }
             }
 
-            // Tip (dynamic)
             val tip = when {
                 totalSpent > totalBalance -> "Consider reducing non-essential spending."
                 remaining < safeSpendToday * 5 -> "You have a tight budget left. Spend carefully."
@@ -150,7 +156,6 @@ class DashboardActivity : AppCompatActivity() {
             }
             tvRecentTip.text = tip
 
-            // Gamification (streak, level, badge)
             val statsDao = db.userStatsDao()
             val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
             val stats = statsDao.getStats()
@@ -194,6 +199,7 @@ class DashboardActivity : AppCompatActivity() {
         tvRecentItem2 = findViewById(R.id.tvRecentItem2)
         tvRecentItem3 = findViewById(R.id.tvRecentItem3)
         tvRecentTip = findViewById(R.id.tvRecentTip)
+        tvMinGoal = findViewById(R.id.tvMinGoal)
 
         val btnFinanceArrow = findViewById<ImageButton>(R.id.btnFinanceArrow)
         val btnFinance = findViewById<ImageButton>(R.id.btnFinance)

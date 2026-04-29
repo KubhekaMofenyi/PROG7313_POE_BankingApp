@@ -173,6 +173,16 @@
                     android:text="You are managing your budget well this month."
                     android:textColor="@color/success_green"
                     android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/tvMinGoal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
             </LinearLayout>
 
             <!-- Summary row -->

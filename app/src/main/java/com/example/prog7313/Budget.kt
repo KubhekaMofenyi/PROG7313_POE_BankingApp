@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 data class Budget(
     @PrimaryKey val id: Int = 1,
     val monthlyGoal: Double,
+    val minMonthlyGoal: Double = 0.0, // minimum goal (new)
     val groceriesLimit: Double,
     val transportLimit: Double,
     val entertainmentLimit: Double,
