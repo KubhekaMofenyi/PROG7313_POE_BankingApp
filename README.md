@@ -1,12 +1,12 @@
-# 💰 PROG7313_POE_BankingApp
+# 💰 PROG7313 POE – Banking App (Zentavo)
 
-## 👥 Group Project By
+## 👥 Group Members
 
-- Neha Singh - ST10433945  
-- Mofenyi Kubheka - ST10439309  
-- Oarabile Marwane - ST10436124  
-- Lesego Raphahla Marota - ST10448763  
-- Mamaphale Leago Tema - ST10443515  
+* Neha Singh – ST10433945
+* Mofenyi Kubheka – ST10439309
+* Oarabile Marwane – ST10436124
+* Lesego Raphahla Marota – ST10448763
+* Mamaphale Leago Tema – ST10443515
 
 ---
 
@@ -14,254 +14,204 @@
 
 ## 🧠 Overview
 
-Zentavo is a mobile budgeting application designed to help users manage their personal finances in a structured and intuitive way.
+Zentavo is a mobile budgeting application designed to help users manage their personal finances through structured expense tracking, category organisation, and monthly budgeting.
 
-The application allows users to track expenses, organise spending into categories, set monthly budget plans, and view financial summaries.
-
-The goal of the system is to promote responsible financial behaviour by giving users clear visibility of their spending and financial activity.
+The application provides users with clear visibility of their financial activity and promotes responsible spending habits.
 
 ---
 
-## 🎯 Design Approach
+## 🎯 Design Considerations
 
-The application was designed with the following key principles:
-
-- **User-friendly interface** → simple navigation and clear layouts  
-- **Consistency** → uniform colours, spacing, and structure across all screens  
-- **Stability** → prevents crashes and handles incorrect input properly  
-- **Clarity** → financial data is easy to read and understand  
-
-These design choices ensure the application is both functional and easy to use.
+* User-friendly interface with simple navigation
+* Consistent layout, colours, and spacing
+* Error handling to prevent crashes
+* Clear and readable financial data
 
 ---
 
 ## ⚙️ Core Features
 
 ### 🔐 User Authentication
-Users can register and log in securely using their credentials.  
-This ensures controlled access to the application.
+
+* Users can register and log in
+* Secure access to the application
 
 ---
 
-### 📂 Categories
-The app uses predefined categories such as:
-- Groceries  
-- Transport  
-- Bills  
-- Entertainment  
-- Other  
+### 📂 Category Management
 
-These categories are used to organise expenses.
+* Create, edit, and delete categories
+* Prevents duplicate categories (case-insensitive)
 
 ---
 
 ### ➕ Add Expense
-Users can create an expense by entering:
-- Amount  
-- Date  
-- Description  
-- Category  
 
-Once saved, the expense is stored in the database and updates the system immediately.
+Users can create expenses with:
 
----
+* Amount
+* Date
+* Description
+* Category
 
-### 🧾 Receipt / Photo Feature (Prototype)
-Users can attach a receipt indicator when adding an expense.  
-This represents linking proof of purchase to transactions.
+✔ Stored in RoomDB
+✔ Updates immediately
 
 ---
 
-### 📊 Monthly Planner
-Users can define a monthly budget and allocate spending limits across categories.
+### 🧾 Receipt Upload (Optional)
 
-The system calculates:
-- Allocated budget  
-- Remaining balance  
+* Users can attach a receipt indicator to expenses
 
 ---
 
-### 🏠 Dashboard
-The dashboard provides an overview of:
-- Total budget  
-- Amount spent  
-- Remaining balance  
-- Spending insights  
+### 📅 Expense History & Filtering
 
-All values update dynamically.
-
----
-
-### 📉 Finance Screen
-Displays:
-- Spending summaries  
-- Category totals  
-- Charts / visualisations  
-
-This helps users analyse spending behaviour.
-
----
-
-### 📜 Expense History
-Users can:
-- View all expenses  
-- Edit entries  
-- Delete entries  
+* View all expenses
+* Filter by category
+* Filter by date range
 
 ---
 
 ### 📊 Category Totals
-The system calculates total spending per category, allowing users to understand spending distribution.
+
+* Displays total spending per category
+* Shows percentage breakdown
+
+---
+
+### 📉 Monthly Planner
+
+* Set minimum and maximum goals
+* Allocate budgets per category
+* Track remaining budget
+
+---
+
+### 🏠 Dashboard
+
+Displays:
+
+* Total balance
+* Remaining amount
+* Daily spend estimate
+* Alerts (overspending warnings)
+* Top categories
+* Recent activity
 
 ---
 
 ### 🏆 Gamification
-Displays user engagement and budgeting progress to encourage better financial habits.
 
----
-
-### ⚙️ Settings
-Provides a central place for app-related options and completes the app structure.
+* Achievements and streak tracking
 
 ---
 
 ## 💾 Data Storage
 
-All data is stored locally using a Room (SQLite) database.
-
-This ensures:
-- Data persistence  
-- Offline functionality  
-- Data remains after restarting the app  
+* Uses Room (SQLite database)
+* Supports offline usage and persistence
 
 ---
 
-## 🧪 Logging & Code
+## 🧪 Automated Testing & CI/CD
 
-- Code includes comments explaining core logic  
-- Logging is used to track key actions such as:
-  - Login  
-  - Expense creation  
-  - Data retrieval  
+GitHub Actions workflows included:
+
+* Build Debug APK
+* Unit Testing
+* Dependency Check
+* Android Lint
+* Final Release Validation
 
 ---
 
 ## 🖼️ Screenshots
 
-All screenshots are stored in the `screenshots` folder in this repository.
+### 🔐 Login Screen
+
+![Login](screenshots/part2/LoginPage.png)
+
+### 🏠 Dashboard
+
+![Dashboard](screenshots/part2/Dashboard1.png)
+![Dashboard](screenshots/part2/Dashboard2.png)
+
+### 📂 Category Management
+
+![Category](screenshots/part2/CategoryCreation1.png)
+![Category](screenshots/part2/CategoryCreation2.png)
+
+### ➕ Add Expense
+
+![Expense](screenshots/part2/ExpenseCreation.png)
+![Expense](screenshots/part2/ExpenseEntry.png)
+
+### 📜 Expense History & Filters
+
+![Filters](screenshots/part2/FiltersForExpenseHistory.png)
+![Filtered](screenshots/part2/FilteredExpensesWorking.png)
+
+### 📊 Category Totals
+
+![Totals](screenshots/part2/CategoryTotals.png)
 
 ---
 
-### 🔐 Login Screen  
-[View Full Image](screenshots/login.png)  
-![Login Screen](screenshots/login.png)
+## 📱 APK Download
+
+👉 [Download APK](apk/app-debug.apk)
 
 ---
 
-### 🏠 Dashboard  
-[View Full Image](screenshots/dashboard.png)  
-![Dashboard](screenshots/dashboard.png)
-
----
-
-### 📂 Category Screen  
-[View Full Image](screenshots/category.png)  
-![Category](screenshots/category.png)
-
----
-
-### ➕ Add Expense  
-[View Full Image](screenshots/add_expense.png)  
-![Add Expense](screenshots/add_expense.png)
-
----
-
-### 🧾 Expense with Receipt  
-[View Full Image](screenshots/photo.png)  
-![Expense with Photo](screenshots/photo.png)
-
----
-
-### 📊 Monthly Planner  
-[View Full Image](screenshots/planner.png)  
-![Planner](screenshots/planner.png)
-
----
-
-### 📜 Expense History  
-[View Full Image](screenshots/expense_history.png)  
-![Expense History](screenshots/expense_history.png)
-
----
-
-### 📈 Category Totals  
-[View Full Image](screenshots/category_totals.png)  
-![Category Totals](screenshots/category_totals.png)
-
----
-
-### 🏆 Gamification  
-[View Full Image](screenshots/gamification.png)  
-![Gamification](screenshots/gamification.png)
-
----
-
-### ⚙️ Settings  
-[View Full Image](screenshots/settings.png)  
-![Settings](screenshots/settings.png)
-
----
-
-## 🔗 GitHub Usage
-
-This project is managed using GitHub for version control.
-
-The repository includes:
-- Full Android project  
-- Kotlin source code  
-- Layout files  
-- Resources  
-- Documentation  
-
----
-
-## ▶️ How to Run the App
-
-1. Clone or download the repository  
-2. Open in Android Studio  
-3. Allow Gradle to sync  
-4. Run on emulator or Android device  
-5. Log in or register  
-
----
-
-## 📱 APK File
-
-The APK file is included in the final submission and can be installed directly.
-
----
-
-## 🎥 Demo Video
+## 🎥 Demonstration Video
 
 👉 
 
 ---
 
-## 📦 Submission Includes
+## 📄 Documentation
 
-- Full source code  
-- README documentation  
-- Screenshots  
-- Demo video  
-- APK file  
-- Part 1 document  
+Located in:
+docs/
+
+Includes:
+
+* Part 1 PDF
+
+---
+
+## ▶️ How to Run the App
+
+1. Clone repository
+2. Open in Android Studio
+3. Sync Gradle
+4. Run on emulator or device
+5. Login or register
+
+---
+
+## 📦 Submission Checklist
+
+✔ Source code
+✔ README
+✔ Screenshots
+✔ APK
+✔ Demo video
+✔ Documentation
 
 ---
 
 ## 📝 Final Notes
 
-Zentavo demonstrates a functional budgeting application with core financial tracking features.
+Zentavo is a fully functional budgeting application that meets the requirements of Part 2.
 
-The system includes authentication, expense tracking, budgeting, financial summaries, and local data storage, all implemented in a structured and user-friendly way.
+It demonstrates:
 
-The application runs in the emulator and meets the requirements for the Part 2 App Prototype Development submission.
+* Working Android app
+* Room database integration
+* Required features from rubric
+* Clean UI
+* Automated testing via GitHub Actions
+
+The application runs successfully and satisfies all submission requirements.
